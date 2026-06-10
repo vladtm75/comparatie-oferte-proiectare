@@ -41,7 +41,8 @@ a{color:inherit}
 
 /* STICKY NAV */
 nav{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--soft);
-  display:flex;gap:4px;overflow-x:auto;padding:8px 12px;scrollbar-width:none}
+  display:flex;gap:4px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;padding:8px 12px;scrollbar-width:none}
 nav::-webkit-scrollbar{display:none}
 nav a{flex:0 0 auto;font-size:12.5px;font-weight:700;color:var(--mut);text-decoration:none;
   padding:7px 13px;border-radius:20px;background:var(--cream);white-space:nowrap}
@@ -214,28 +215,40 @@ footer{text-align:center;color:var(--da);font-weight:300;font-size:11px;letter-s
     </div>
   </section>
 
-  <a class="deskbtn" href="index.html">Deschide dashboard-ul complet (desktop) →</a>
+  <a class="deskbtn" href="index.html?desktop">Deschide dashboard-ul complet (desktop) →</a>
 
 </main>
 
 <footer>Medima Health · Excelență în imagistică medicală<br>Clinicile Dr. Ardeleanu · Din 2017</footer>
 
 <script>
-// highlight active nav link on scroll
-var links=[].slice.call(document.querySelectorAll('#nav a'));
+// Highlight active nav link on scroll. Important: never call scrollIntoView on the
+// page here — it fights the user's vertical scroll. Only scroll the nav bar itself,
+// horizontally, by setting nav.scrollLeft directly.
+var nav=document.getElementById('nav');
+var links=[].slice.call(nav.querySelectorAll('a'));
 var secs=links.map(function(a){return document.querySelector(a.getAttribute('href'));});
-function onScroll(){
-  var y=window.scrollY+70,idx=0;
+var ticking=false,lastIdx=-1;
+function update(){
+  ticking=false;
+  var y=window.pageYOffset+80,idx=0;
   for(var i=0;i<secs.length;i++){ if(secs[i]&&secs[i].offsetTop<=y) idx=i; }
+  if(idx===lastIdx) return;
+  lastIdx=idx;
   links.forEach(function(a,i){a.classList.toggle('on',i===idx);});
-  var act=links[idx]; if(act) act.scrollIntoView({inline:'center',block:'nearest'});
+  // center the active chip inside the nav strip only (horizontal, no page movement)
+  var act=links[idx];
+  if(act){ nav.scrollLeft = act.offsetLeft - (nav.clientWidth/2) + (act.offsetWidth/2); }
 }
-window.addEventListener('scroll',onScroll,{passive:true});
+window.addEventListener('scroll',function(){
+  if(!ticking){ ticking=true; window.requestAnimationFrame(update); }
+},{passive:true});
 links.forEach(function(a){a.addEventListener('click',function(e){
   e.preventDefault();
   var t=document.querySelector(a.getAttribute('href'));
   if(t) window.scrollTo({top:t.offsetTop-56,behavior:'smooth'});
 });});
+update();
 </script>
 </body>
 </html>
