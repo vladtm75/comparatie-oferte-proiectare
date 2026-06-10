@@ -1,0 +1,1413 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Comparație Oferte Proiectare — Medima × Dr. Ardeleanu</title>
+<style>html,body{margin:0;padding:0}#root{min-height:100vh}
+#loading{font-family:system-ui,sans-serif;color:#7B1C16;padding:40px;text-align:center;font-size:15px}</style>
+<script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+<script crossorigin src="https://unpkg.com/recharts@2.12.7/umd/Recharts.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+</head>
+<body>
+<div id="root"><div id="loading">Se încarcă dashboard-ul…</div></div>
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useEffect, useRef } = React;
+const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, LabelList, PieChart, Pie, LineChart, Line, Area, AreaChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ComposedChart, ReferenceLine } = Recharts;
+
+// ============================================================================
+//  COMPARAȚIE OFERTE PROIECTARE — 3 case de arhitectură
+//  Medima Health (brand mov) + Dr. Ardeleanu Dental Clinics (brand burgundy)
+//  Obiectiv: selecția unui AL DOILEA proiectant (reducere dependență furnizor)
+//  Curs orientativ 1 EUR = 4,98 RON (din analiza comparativă)  ·  toate valorile fără TVA
+// ============================================================================
+
+const RATE = 4.98; // curs orientativ folosit în analiza comparativă (ofertele ENSO și A Studio erau în EUR)
+
+// ---- Logos (base64 injected below) -----------------------------------------
+const DA_LOGO = "";
+const MED_LOGO = "";
+
+// ---- Brand themes -----------------------------------------------------------
+const DA = {
+  key: "da", name: "Dr. Ardeleanu Dental Clinics", short: "Dr. Ardeleanu",
+  primary: "#7B1C16", primaryDk: "#5d130f", accent: "#C9A227", soft: "#F2DAB7",
+  cream: "#F5EDE3", series2: "#dd7e6b", pos: "#B5BD5C",
+  font: "'Poppins', system-ui, sans-serif", onPrimary: "#FBE483", logo: "",
+};
+const MED = {
+  key: "med", name: "Medima Health", short: "Medima",
+  primary: "#37008D", primaryDk: "#280066", accent: "#2AD1BC", soft: "#AEA9FF",
+  cream: "#F3F1FB", series2: "#7D5DE7", pos: "#2AD1BC",
+  font: "'Red Hat Text', system-ui, sans-serif", onPrimary: "#2AD1BC", logo: "",
+};
+const NEUTRAL = {
+  key: "neutral", name: "Medima Health × Dr. Ardeleanu", short: "Sumar",
+  primary: "#2f2a3d", primaryDk: "#211d2c", accent: "#C9A227", soft: "#e3dfea",
+  cream: "#f6f5f8", series2: "#7B1C16", pos: "#B5BD5C",
+  font: "'Poppins', system-ui, sans-serif", onPrimary: "#FBE483", logo: "",
+};
+
+const ronF = (n) => n == null ? "—" : Math.round(n).toLocaleString("ro-RO") + " RON";
+const eurF = (n) => n == null ? "—" : "€" + Math.round(n).toLocaleString("ro-RO");
+
+// ---- DR. ARDELEANU (clinică 382 m², monument istoric) — RON fără TVA ---------
+// Sursă: "Analiza_comparativa_oferte_Dr_Ardeleanu_1.xlsx" (ofertele ENSO și A Studio
+// convertite din EUR la curs 4,98). Toate cifrele în RON, fără TVA.
+const DRA_AREA = 382;
+const drASections = [
+  { name: "Studii preliminare & avize", lines: [
+    { item: "Releveu / scanare laser",                 cds: 2500,  enso: 13147.2, as: 12450 },
+    { item: "Ridicare topografică (viză OCPI)",         cds: 2000,  enso: 3012.9,  as: 6225 },
+    { item: "Expertiză tehnică",                        cds: 12000, enso: 6874.89, as: 6225 },
+    { item: "Studiu geotehnic",                         cds: 8500,  enso: 4519.35, as: 4980 },
+    { item: "Randări / simulări 3D",                    cds: 8000,  enso: 7470,    as: 10458 },
+    { item: "Studiu fezabilitate sisteme alternative",  cds: 1500,  enso: 1095.6,  as: 3112.5 },
+    { item: "Raport audit energetic",                  cds: 1000,  enso: 4382.4,  as: 3112.5 },
+    { item: "Raport conformare nZEB",                  cds: 1000,  enso: 2191.2,  as: 0 },
+  ]},
+  { name: "Proiect tehnic — faza DTAC", lines: [
+    { item: "Arhitectură",     cds: 65000, enso: 9462,   as: 13316.52 },
+    { item: "Structură",       cds: 7500,  enso: 7943.1, as: 3804.72 },
+    { item: "Instalații",      cds: 3000,  enso: 6025.8, as: 3804.72 },
+    { item: "Sistematizare",   cds: 3000,  enso: 0,      as: 1902.36 },
+  ]},
+  { name: "Proiect tehnic — faza PTh + DDE (execuție)", lines: [
+    { item: "Arhitectură & Design Interior", cds: 35000, enso: 34237.5, as: 13316.52 },
+    { item: "Structură",                     cds: 7500,  enso: 5478,    as: 7609.44 },
+    { item: "Instalații",                    cds: 26500, enso: 13695,   as: 7609.44 },
+  ]},
+  { name: "Asistență tehnică", lines: [
+    { item: "Asistență tehnică execuție", cds: 22000, enso: 2739, as: 4980 },
+  ]},
+];
+const CONCRETE_DRA = 206000;     // RON fără TVA
+const ENSO_DRA = 122273.94;      // RON fără TVA (= 24.553 € × 4,98)
+const ASTUDIO_DRA = 92292.348;   // RON fără TVA, după discount 10% (= 18.533 € × 4,98)
+const ASTUDIO_DRA_GROSS = 102906.72; // sumă linii înainte de discount
+
+const draTotals = [
+  { firm: "A Studio",   ron: ASTUDIO_DRA,  note: "cea mai mică · incumbent" },
+  { firm: "EnsoDesign", ron: ENSO_DRA,     note: "intermediar" },
+  { firm: "Concrete",   ron: CONCRETE_DRA, note: "premium · full-service" },
+];
+
+// A Studio — istoric clinici Dr. Ardeleanu (EUR final, după discount 10%) — sursă: dashboard A Studio
+const aStudioHistory = [
+  { loc: "Brăila",          addr: "Strada Câmpinii 22",       mp: 810,  eur: 30758,   mpp: 37.97, status: "Finalizat" },
+  { loc: "Câmpina",         addr: "Strada Republicii 40",     mp: 486,  eur: 19209.8, mpp: 39.53, status: "Aprobat" },
+  { loc: "Focșani",         addr: "Strada Cernei 12",         mp: 382,  eur: 17814,   mpp: 46.63, status: "Finalizat" },
+  { loc: "Târgoviște",      addr: "Calea Câmpulungului 30",   mp: 382,  eur: 18532.6, mpp: 48.51, status: "Finalizat" },
+  { loc: "Curtea de Argeș", addr: "Negru Vodă 53",            mp: 433,  eur: 25501.3, mpp: 58.89, status: "În validare" },
+  { loc: "Slatina",         addr: "Strada Ionașcu 9",         mp: 362,  eur: 22096.6, mpp: 61.04, status: "Finalizat" },
+  { loc: "Slobozia",        addr: "Walter Mărăcineanu 8",     mp: null, eur: 6030,    mpp: null,  status: "Finalizat" },
+  { loc: "Oltenița",        addr: "Strada Argeșului 23",      mp: null, eur: 4230,    mpp: null,  status: "Finalizat" },
+];
+// A Studio — date suplimentare (din dashboard-ul A Studio)
+const aStudioInfo = {
+  since: "2017", nClinici: 8, mediaMp: 46.74,
+  tarifStd: "DTAC 12 €/mp · PTh 15 €/mp",
+  curtea: { mp: 433, mpp: 58.89, eur: 25501.3,
+    tarif: "DTAC 13 €/mp · PTh 16 €/mp (+866 €)",
+    extra: "Expertiză desființare 2.125 € · SRE + nZEB 3.750 € · Scenariu incendiu 1.250 € = 7.125 € servicii extra" },
+};
+
+// ---- MEDIMA (fit-out clinică ~190–200 m²) — RON fără TVA ---------------------
+const ASTUDIO_MED_EUR = 7010;   // 29 €/mp × 190 mp + 1.500 € (verificare MLPAT + scenariu)
+const ASTUDIO_MED = Math.round(ASTUDIO_MED_EUR * RATE);
+const CONCRETE_MED = 53000;
+const medTotals = [
+  { firm: "A Studio", ron: ASTUDIO_MED,  mp: 190, mpRate: ASTUDIO_MED_EUR / 190,         note: "scope redus" },
+  { firm: "Concrete", ron: CONCRETE_MED, mp: 200, mpRate: (CONCRETE_MED / RATE) / 200,   note: "incl. releveu + as-build" },
+];
+const medAStudioLines = [
+  { item: "Concept V2",                                      val: "4 €/mp" },
+  { item: "PTh — Arhitectură",                               val: "14 €/mp" },
+  { item: "PTh — Instalații HVAC + detecție/stingere incendiu", val: "11 €/mp" },
+  { item: "Verificare cerințe MLPAT + scenariu incendiu",    val: "1.500 € forfetar" },
+];
+const medConcreteLines = [
+  { item: "Releveu",                          val: "2.500 RON" },
+  { item: "Proiect PT + DE (incl. vizat MLPAT)", val: "42.000 RON" },
+  { item: "Asistență tehnică + As-build",     val: "8.500 RON" },
+];
+
+const TABS = [
+  { id: "dra",       theme: DA,      label: "Dr. Ardeleanu" },
+  { id: "medima",    theme: MED,     label: "Medima" },
+  { id: "astudio",   theme: DA,      label: "A Studio · Istoric Oferte" },
+  { id: "furnizori", theme: NEUTRAL, label: "Profil Furnizori" },
+  { id: "sumar",     theme: NEUTRAL, label: "Concluzii & Recomandare" },
+];
+
+function Dashboard() {
+  const [tabId, setTabId] = useState("dra");
+  const [cur, setCur] = useState("both");
+  const tab = TABS.find((t) => t.id === tabId);
+  const T = tab.theme;
+
+  const money = (ron, eur) => {
+    const e = eur != null ? eur : ron / RATE;
+    if (cur === "ron") return ronF(ron);
+    if (cur === "eur") return eurF(e);
+    return `${ronF(ron)} · ${eurF(e)}`;
+  };
+
+  return (
+    <div style={{ fontFamily: T.font, background: T.cream, color: "#1f1b29", minHeight: "100vh", transition: "background .25s" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700;800&family=Playfair+Display:wght@700;900&family=Red+Hat+Text:wght@300;400;500;700&family=Red+Hat+Display:wght@900&display=swap');
+        * { box-sizing: border-box; }
+        table { border-collapse: collapse; width: 100%; }
+        .row-hover:hover { background: rgba(0,0,0,.025); }
+      `}</style>
+
+      {/* HEADER — simplu, re-temat după tab-ul activ */}
+      <div style={{ background: T.primary, color: "#fff", padding: "16px 30px 0", transition: "background .25s" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, maxWidth: 1180, margin: "0 auto" }}>
+          <div style={{ fontWeight: 800, fontSize: 21, lineHeight: 1.1, fontFamily: T.key === "med" ? "'Red Hat Text', sans-serif" : "'Playfair Display', serif" }}>
+            Comparație Oferte Proiectare
+            <span style={{ fontWeight: 400, fontSize: 11.5, color: "rgba(255,255,255,.7)", marginLeft: 12, fontFamily: T.font }}>1 € = 4,98 RON · fără TVA</span>
+          </div>
+          <div style={{ display: "flex", gap: 5, background: "rgba(255,255,255,.14)", padding: 4, borderRadius: 9 }}>
+            {[["both", "RON + €"], ["ron", "RON"], ["eur", "€"]].map(([k, lbl]) => (
+              <button key={k} onClick={() => setCur(k)}
+                style={{ border: "none", cursor: "pointer", padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 700,
+                  fontFamily: "inherit", background: cur === k ? "#fff" : "transparent", color: cur === k ? T.primary : "#fff" }}>
+                {lbl}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", maxWidth: 1180, margin: "12px auto 0" }}>
+          {TABS.map((t) => (
+            <button key={t.id} onClick={() => setTabId(t.id)}
+              style={{ border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 13.5, fontWeight: 700,
+                padding: "10px 18px", borderRadius: "10px 10px 0 0",
+                background: tabId === t.id ? T.cream : "transparent",
+                color: tabId === t.id ? T.primary : "rgba(255,255,255,.85)",
+                borderTop: tabId === t.id ? `3px solid ${t.theme.accent}` : "3px solid transparent" }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ padding: "24px 30px 44px", maxWidth: 1180, margin: "0 auto" }}>
+        {tabId === "sumar" && <Sumar T={T} money={money} />}
+        {tabId === "dra" && <DrA T={T} money={money} cur={cur} />}
+        {tabId === "medima" && <Medima T={T} money={money} cur={cur} />}
+        {tabId === "astudio" && <AStudio />}
+        {tabId === "furnizori" && <Furnizori T={T} money={money} />}
+      </div>
+
+      <div style={{ textAlign: "center", color: T.primary, fontWeight: 300, fontSize: 11, paddingBottom: 18, letterSpacing: 1 }}>
+        Medima Health · Excelență în imagistică medicală   |   Clinicile Dr. Ardeleanu · Din 2017
+      </div>
+    </div>
+  );
+}
+
+/* ===================== shared UI ========================================== */
+function Mark({ T }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 44, minWidth: 44,
+      padding: "0 12px", background: "rgba(255,255,255,.16)", borderRadius: 9, fontWeight: 800, fontSize: 16, color: "#fff" }}>
+      {T.short}
+    </div>
+  );
+}
+function Pill({ children, bg, color }) {
+  return <span style={{ background: bg, color: color || "#fff", fontSize: 11, fontWeight: 700,
+    padding: "3px 9px", borderRadius: 20, whiteSpace: "nowrap" }}>{children}</span>;
+}
+function Card({ children, style, T }) {
+  return <div style={{ background: "#fff", border: `1px solid ${T ? T.soft : "#e7e1ee"}`, borderRadius: 14, padding: 18, ...style }}>{children}</div>;
+}
+function Title({ children, sub, T }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ color: T.primary, fontWeight: 800, fontSize: 18 }}>{children}</div>
+      {sub && <div style={{ color: "#6c6577", fontSize: 13, marginTop: 2 }}>{sub}</div>}
+    </div>
+  );
+}
+function KPI({ label, value, sub, T, big }) {
+  return (
+    <Card T={T} style={{ flex: 1, minWidth: 180 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: .5, color: "#8a8397", textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: big ? 26 : 22, fontWeight: 800, color: T.primary, marginTop: 6, lineHeight: 1.1 }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: "#6c6577", marginTop: 4 }}>{sub}</div>}
+    </Card>
+  );
+}
+
+/* ===================== TAB: SUMAR & RECOMANDARE =========================== */
+function Sumar({ T, money }) {
+  return (
+    <div>
+      <Card T={T} style={{ background: NEUTRAL.cream, borderLeft: `5px solid ${T.accent}`, marginBottom: 18 }}>
+        <div style={{ fontWeight: 800, color: T.primary, fontSize: 16, marginBottom: 6 }}>Obiectiv</div>
+        <div style={{ fontSize: 14, lineHeight: 1.55, color: "#34303d" }}>
+          Adăugarea unui <b>al doilea proiectant</b> alături de A Studio, pentru a reduce dependența de un furnizor unic
+          pe măsură ce Medima și Dr. Ardeleanu se extind. <b>Nu o înlocuire</b> — A Studio a livrat constant și bine
+          (8 clinici Dr. Ardeleanu din 2017); riscul actual este concentrarea, nu performanța.
+        </div>
+      </Card>
+
+      <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 18 }}>
+        <KPI T={T} label="Oferte analizate" value="5" sub="3 case · 2 rețele" />
+        <KPI T={T} label="Dr. Ardeleanu (382 m²)" value="3 oferte" sub="A Studio · Concrete · EnsoDesign" />
+        <KPI T={T} label="Medima (fit-out)" value="2 oferte" sub="A Studio · Concrete · (Enso lipsește)" />
+        <KPI T={T} label="Spread preț Dr.A" value="2,2×" sub="A Studio → Concrete (382 m²)" />
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(310px, 1fr))", gap: 14, marginBottom: 18 }}>
+        <FirmMini T={T} color="#7B1C16" name="A Studio" tag="Furnizor actual" lines={[
+          "Partener Medima + Dr. Ardeleanu din 2017", "8 clinici livrate · tarif mediu €46,74/mp",
+          "Discount fidelitate 10% · plată eșalonată", "Preț competitiv, dar dependență de furnizor unic"]} />
+        <FirmMini T={T} color="#dd7e6b" name="Concrete & Design Solutions" tag="Premium · peste buget" lines={[
+          "11+ ani · ISO 9001/14001/27001/45001", "Autorizații in-house: incendiu, efracție, electrice, gaze",
+          "Asigurare profesională €2 mil · echipă completă", "Preț ~2,2× A Studio → exclus ca furnizor de rută"]} />
+        <FirmMini T={T} color="#C9A227" name="EnsoDesign" tag="Candidat #2 realist" lines={[
+          "Preț ~1,3× A Studio (≈ 24.553 € pe Dr.A) — în prag acceptabil", "Ofertă în EUR · scope similar pe faze",
+          "Fără ISO / asigurare / echipă menționate în ofertă", "De validat credențiale + grafic de plăți înainte de contractare"]} />
+      </div>
+
+      <Card T={T} style={{ marginBottom: 18, borderTop: `4px solid ${T.accent}` }}>
+        <Title T={T} sub="Singurul furnizor cu grafic clar — devine standardul de aliniere pentru ceilalți">Benchmark · condiții de plată</Title>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
+          {[{ l: "Avans (la semnare)", v: "50%", hot: true }, { l: "La predare PT", v: "25%", hot: false },
+            { l: "La autorizația de construire", v: "20%", hot: true }, { l: "La recepție", v: "5%", hot: false }].map((p, i) => (
+            <div key={i} style={{ flex: "1 1 150px", minWidth: 140, padding: "12px 14px", borderRadius: 10,
+              background: p.hot ? T.soft : "#f6f5f8", border: `1px solid ${p.hot ? T.accent : "#e7e1ee"}` }}>
+              <div style={{ fontSize: 24, fontWeight: 800, color: T.primary }}>{p.v}</div>
+              <div style={{ fontSize: 11.5, color: "#6c6577", marginTop: 2 }}>{p.l}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize: 12.5, color: "#46414f", lineHeight: 1.5 }}>
+          <b style={{ color: T.primary }}>A Studio (50 / 25 / 20 / 5)</b> este singurul furnizor care detaliază eșalonarea plăților.
+          EnsoDesign și Concrete & Design <b>nu specifică un grafic</b> în ofertă — îl cerem aliniat la acest model, cu accent pe
+          avansul de 50% și tranșa de 20% la obținerea autorizației de construire.
+        </div>
+      </Card>
+
+      <Card T={T}>
+        <Title T={T} sub="Decizie: EnsoDesign ca al doilea furnizor, adus cât mai aproape de A Studio">Recomandare & plan de acțiune</Title>
+        <Reco n="1" T={T} title="A Studio rămâne furnizorul principal și benchmark-ul">
+          Track record dovedit (8 clinici), cel mai bun preț (≈ 92.300 RON / 18.533 € pe Dr.A) și condiții de plată clare.
+          Rămâne referința de preț <b>și</b> de eșalonare a plăților pentru ceilalți furnizori.
+        </Reco>
+        <Reco n="2" T={T} title="EnsoDesign — al doilea furnizor ales, de aliniat la A Studio">
+          Direcția agreată: lucrăm cu EnsoDesign și îl aducem <b>cât mai aproape de A Studio pe ambele planuri</b>.
+          Pe <b>cost</b>, de la ≈ 122.300 RON (24.553 €) către nivelul A Studio ≈ 92.300 RON (18.533 €) — țintă de negociere ~ −24%.
+          Pe <b>condiții de plată</b>, adoptarea graficului A Studio: 50% avans · 25% la predare PT · 20% la autorizația de construire · 5% la recepție
+          (EnsoDesign nu a propus un grafic). În paralel: dovezi ISO/asigurare/echipă + referințe și un pilot pe un proiect mic.
+        </Reco>
+        <Reco n="3" T={T} title="Concrete & Design — exclus ca furnizor de rută (preț ~2,2×)">
+          Credențiale excelente, dar la ~2,2× față de A Studio depășește pragul acceptabil pentru proiectele curente.
+          Îl păstrăm pe lista scurtă doar pentru proiecte excepționale (monument complex / turnkey cu un singur responsabil),
+          și doar după o renegociere semnificativă de preț.
+        </Reco>
+        <div style={{ marginTop: 14, padding: 14, background: T.soft, borderRadius: 10, fontSize: 13.5, lineHeight: 1.55 }}>
+          <b style={{ color: T.primary }}>Țintă de negociere EnsoDesign vs A Studio (Dr.A, fără TVA):</b><br />
+          Cost: 122.300 → ~92.300 RON (apropiere de A Studio, ~−24% / ~30.000 RON / ~6.000 €).&nbsp;
+          Plată: aliniere la 50% avans / 20% la autorizația de construire (model A Studio).
+        </div>
+        <div style={{ marginTop: 12, padding: 14, background: NEUTRAL.cream, borderRadius: 10, fontSize: 13.5, lineHeight: 1.55 }}>
+          <b style={{ color: T.primary }}>Pași următori:</b> (1) rundă de negociere cu EnsoDesign pe preț (țintă: nivel A Studio) și pe grafic de plăți
+          (avans + tranșă la autorizație, model A Studio); (2) cere dovezi ISO/asigurare/echipă + referințe; (3) pilot pe un proiect mic;
+          (4) cere EnsoDesign și o ofertă pentru Medima pe același brief.
+        </div>
+      </Card>
+    </div>
+  );
+}
+function FirmMini({ T, color, name, tag, lines }) {
+  return (
+    <Card T={T} style={{ borderTop: `4px solid ${color}` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+        <div style={{ fontWeight: 800, color: "#2b2735", fontSize: 15 }}>{name}</div>
+        <Pill bg={color}>{tag}</Pill>
+      </div>
+      {lines.map((l, i) => (
+        <div key={i} style={{ fontSize: 12.5, color: "#46414f", display: "flex", gap: 7, marginTop: 5 }}>
+          <span style={{ color }}>▪</span><span>{l}</span>
+        </div>
+      ))}
+    </Card>
+  );
+}
+function Reco({ n, title, children, T }) {
+  return (
+    <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+      <div style={{ flexShrink: 0, width: 28, height: 28, borderRadius: 8, background: T.primary, color: "#fff",
+        display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>{n}</div>
+      <div>
+        <div style={{ fontWeight: 700, color: "#2b2735", fontSize: 14.5 }}>{title}</div>
+        <div style={{ fontSize: 13, color: "#46414f", lineHeight: 1.5, marginTop: 2 }}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ===================== TAB: DR. ARDELEANU ================================= */
+function DrA({ T, money, cur }) {
+  const colors = { "A Studio": T.primary, EnsoDesign: T.accent, Concrete: T.series2 };
+  const chartData = draTotals.map((d) => ({ ...d, mp: d.ron / DRA_AREA }));
+  const firmCols = [
+    { key: "as",   label: "A Studio",   color: T.primary },
+    { key: "enso", label: "EnsoDesign", color: T.accent },
+    { key: "cds",  label: "Concrete",   color: T.series2 },
+  ];
+  const subtotal = (lines, k) => lines.reduce((s, l) => s + l[k], 0);
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 18 }}>
+        <KPI T={T} big label="A Studio · cea mai mică" value={money(ASTUDIO_DRA)} sub="≈ 18.533 € · după discount 10%" />
+        <KPI T={T} big label="EnsoDesign" value={money(ENSO_DRA)} sub="≈ 24.553 € · ofertă intermediară" />
+        <KPI T={T} big label="Concrete & Design" value={money(CONCRETE_DRA)} sub="≈ 41.365 € · full-service" />
+      </div>
+
+      <Card T={T} style={{ marginBottom: 18, background: NEUTRAL.cream, borderLeft: `5px solid ${T.accent}` }}>
+        <div style={{ fontSize: 13.5, lineHeight: 1.55 }}>
+          <b style={{ color: T.primary }}>Citire rapidă:</b> pentru aceeași clădire de 382 m², A Studio este cea mai
+          ieftină ofertă (≈ 92.300 RON), EnsoDesign este la mijloc (≈ 122.300 RON), iar Concrete & Design este cea mai
+          scumpă (206.000 RON, ~2,2× față de A Studio). Diferența majoră vine din faza DTAC + asistență tehnică, unde
+          Concrete include design interior complet, as-build și o echipă multidisciplinară in-house.
+          Ofertele EnsoDesign și A Studio au fost convertite din EUR la curs 4,98.
+        </div>
+      </Card>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 18 }}>
+        <Card T={T}>
+          <Title T={T} sub="Total proiectare, fără TVA (RON)">Comparație totaluri</Title>
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={chartData} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#eee" vertical={false} />
+              <XAxis dataKey="firm" tick={{ fontSize: 12, fill: "#555" }} />
+              <YAxis tick={{ fontSize: 11, fill: "#999" }} tickFormatter={(v) => (v / 1000) + "k"} />
+              <Tooltip formatter={(v) => ronF(v)} />
+              <Bar dataKey="ron" radius={[6, 6, 0, 0]}>
+                {chartData.map((d, i) => <Cell key={i} fill={colors[d.firm]} />)}
+                <LabelList dataKey="ron" position="top" formatter={(v) => Math.round(v / 1000) + "k"} style={{ fontSize: 11, fontWeight: 700, fill: "#444" }} />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+        <Card T={T}>
+          <Title T={T} sub="Preț unitar de proiectare (382 m²)">Cost pe m² (EUR)</Title>
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={chartData} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#eee" vertical={false} />
+              <XAxis dataKey="firm" tick={{ fontSize: 12, fill: "#555" }} />
+              <YAxis tick={{ fontSize: 11, fill: "#999" }} />
+              <Tooltip formatter={(v) => "€" + (v / RATE).toFixed(1) + "/mp"} />
+              <Bar dataKey="mp" radius={[6, 6, 0, 0]}>
+                {chartData.map((d, i) => <Cell key={i} fill={colors[d.firm]} />)}
+                <LabelList dataKey="mp" position="top" formatter={(v) => "€" + (v / RATE).toFixed(0)} style={{ fontSize: 11, fontWeight: 700, fill: "#444" }} />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+      </div>
+
+      <Card T={T} style={{ marginBottom: 18 }}>
+        <Title T={T} sub="Eșalonarea plăților pe faze, conform ofertelor">Condiții de plată</Title>
+        <table>
+          <thead>
+            <tr style={{ background: T.primary, color: "#fff", fontSize: 12 }}>
+              <th style={{ textAlign: "left", padding: "9px 10px", borderRadius: "6px 0 0 0" }}>Furnizor</th>
+              <th style={{ textAlign: "center", padding: "9px 8px", background: T.accent, color: "#3a2a00" }}>Avans<br />(la semnare)</th>
+              <th style={{ textAlign: "center", padding: "9px 8px" }}>La predare PT</th>
+              <th style={{ textAlign: "center", padding: "9px 8px", background: T.accent, color: "#3a2a00" }}>La autorizația<br />de construire</th>
+              <th style={{ textAlign: "center", padding: "9px 8px", borderRadius: "0 6px 0 0" }}>La recepție</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ borderBottom: "1px solid #f0ece6", fontSize: 13 }}>
+              <td style={{ padding: "9px 10px", fontWeight: 600 }}>A Studio</td>
+              <td style={{ textAlign: "center", fontWeight: 800, color: T.primary, background: "#FFF7E6" }}>50%</td>
+              <td style={{ textAlign: "center" }}>25%</td>
+              <td style={{ textAlign: "center", fontWeight: 800, color: T.primary, background: "#FFF7E6" }}>20%</td>
+              <td style={{ textAlign: "center" }}>5%</td>
+            </tr>
+            <tr style={{ borderBottom: "1px solid #f0ece6", fontSize: 13 }}>
+              <td style={{ padding: "9px 10px", fontWeight: 600 }}>EnsoDesign</td>
+              <td colSpan={4} style={{ textAlign: "center", color: "#8a8397", fontStyle: "italic" }}>Nespecificat în ofertă — de stabilit la contractare</td>
+            </tr>
+            <tr style={{ fontSize: 13 }}>
+              <td style={{ padding: "9px 10px", fontWeight: 600 }}>Concrete &amp; Design</td>
+              <td colSpan={4} style={{ textAlign: "center", color: "#8a8397", fontStyle: "italic" }}>Nespecificat — „termene agreate cu beneficiarul”</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style={{ fontSize: 11.5, color: "#8a8397", marginTop: 8 }}>
+          Doar A Studio detaliază eșalonarea: <b>50% avans</b> la semnarea contractului, 25% la predarea PT,
+          <b> 20% la obținerea autorizației de construire</b> (faza DTAC) și 5% la recepție. Pentru EnsoDesign și Concrete
+          recomand solicitarea explicită a graficului de plăți (avans + tranșă la autorizație) înainte de contractare.
+        </div>
+      </Card>
+
+      <Card T={T} style={{ marginBottom: 18 }}>
+        <Title T={T} sub="Toate cele 3 oferte · RON fără TVA · sursă: analiza comparativă">Detaliu pe categorii de lucrări</Title>
+        <table>
+          <thead>
+            <tr style={{ background: T.primary, color: "#fff", fontSize: 12 }}>
+              <th style={{ textAlign: "left", padding: "9px 10px", borderRadius: "6px 0 0 0" }}>Serviciu</th>
+              {firmCols.map((f, i) => (
+                <th key={f.key} style={{ textAlign: "right", padding: "9px 10px", borderRadius: i === 2 ? "0 6px 0 0" : 0 }}>{f.label}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {drASections.map((sec, si) => (
+              <React.Fragment key={si}>
+                <tr style={{ background: T.soft, fontSize: 11.5, fontWeight: 700, color: T.primary }}>
+                  <td style={{ padding: "6px 10px" }}>{sec.name}</td>
+                  {firmCols.map((f) => (
+                    <td key={f.key} style={{ padding: "6px 10px", textAlign: "right" }}>{Math.round(subtotal(sec.lines, f.key)).toLocaleString("ro-RO")}</td>
+                  ))}
+                </tr>
+                {sec.lines.map((r, i) => (
+                  <tr key={i} className="row-hover" style={{ borderBottom: "1px solid #f0ece6", fontSize: 12.5 }}>
+                    <td style={{ padding: "6px 10px 6px 22px", color: "#46414f" }}>{r.item}</td>
+                    {firmCols.map((f) => {
+                      const vals = [r.as, r.enso, r.cds];
+                      const min = Math.min(...vals.filter((x) => x > 0));
+                      const v = r[f.key];
+                      return <td key={f.key} style={{ padding: "6px 10px", textAlign: "right", fontWeight: v === min ? 700 : 400, color: v === min ? "#2c7a3f" : "#333" }}>{Math.round(v).toLocaleString("ro-RO")}</td>;
+                    })}
+                  </tr>
+                ))}
+              </React.Fragment>
+            ))}
+            <tr style={{ fontWeight: 800, fontSize: 13, background: T.soft, borderTop: `2px solid ${T.primary}` }}>
+              <td style={{ padding: "9px 10px" }}>TOTAL fără TVA</td>
+              <td style={{ padding: "9px 10px", textAlign: "right" }}>{Math.round(ASTUDIO_DRA).toLocaleString("ro-RO")}</td>
+              <td style={{ padding: "9px 10px", textAlign: "right" }}>{Math.round(ENSO_DRA).toLocaleString("ro-RO")}</td>
+              <td style={{ padding: "9px 10px", textAlign: "right" }}>{CONCRETE_DRA.toLocaleString("ro-RO")}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style={{ fontSize: 11.5, color: "#8a8397", marginTop: 8 }}>
+          Subtotalurile pe categorii sunt îngroșate; cel mai mic preț pe fiecare linie e marcat cu verde. Total A Studio
+          afișat după discountul de fidelitate 10% (sumă linii înainte de discount: {Math.round(ASTUDIO_DRA_GROSS).toLocaleString("ro-RO")} RON).
+          Pozițiile A Studio includ add-on-ul de 25% contribuții stat.
+        </div>
+      </Card>
+
+      <Card T={T}>
+        <Title T={T} sub="Istoric clinici Dr. Ardeleanu — furnizor actual (EUR final, după discount 10%)">Track record A Studio</Title>
+        <table>
+          <thead>
+            <tr style={{ borderBottom: `2px solid ${T.primary}`, color: T.primary, fontSize: 12, textAlign: "left" }}>
+              <th style={{ padding: "6px 8px" }}>Locație</th>
+              <th style={{ padding: "6px 8px", textAlign: "right" }}>Suprafață</th>
+              <th style={{ padding: "6px 8px", textAlign: "right" }}>Total (€)</th>
+              <th style={{ padding: "6px 8px", textAlign: "right" }}>€/mp</th>
+              <th style={{ padding: "6px 8px" }}>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {aStudioHistory.map((r, i) => (
+              <tr key={i} className="row-hover" style={{ borderBottom: "1px solid #f0ece6", fontSize: 12.5 }}>
+                <td style={{ padding: "6px 8px", fontWeight: 600 }}>{r.loc}</td>
+                <td style={{ padding: "6px 8px", textAlign: "right" }}>{r.mp ? r.mp + " m²" : "—"}</td>
+                <td style={{ padding: "6px 8px", textAlign: "right" }}>{eurF(r.eur)}</td>
+                <td style={{ padding: "6px 8px", textAlign: "right", color: r.mpp > 55 ? "#c0392b" : "#2c7a3f", fontWeight: 600 }}>{r.mpp ? "€" + r.mpp.toFixed(2) : "—"}</td>
+                <td style={{ padding: "6px 8px" }}><Pill bg={r.status === "În validare" ? T.accent : "#e3dfea"} color={r.status === "În validare" ? "#3a2a00" : "#555"}>{r.status}</Pill></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}
+
+/* ===================== TAB: MEDIMA ======================================== */
+function Medima({ T, money, cur }) {
+  const colors = { "A Studio": T.primary, Concrete: T.series2 };
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 18 }}>
+        <KPI T={T} big label="A Studio" value={cur === "eur" ? eurF(ASTUDIO_MED_EUR) : money(ASTUDIO_MED, ASTUDIO_MED_EUR)} sub="~€36,9/mp · 190 m² · scope redus" />
+        <KPI T={T} big label="Concrete & Design" value={money(CONCRETE_MED)} sub="~€53/mp · 200 m² · incl. as-build" />
+        <KPI T={T} big label="EnsoDesign" value="— lipsă —" sub="Nu a ofertat pentru Medima" />
+      </div>
+
+      <Card T={T} style={{ marginBottom: 18, background: "#EEF6FF", borderColor: T.soft }}>
+        <div style={{ fontSize: 13.5, lineHeight: 1.55 }}>
+          <b style={{ color: T.primary }}>Citire rapidă:</b> A Studio este mai ieftin (≈ €7.010 vs €10.643) și mai ieftin pe m²
+          (€36,9 vs €53), <b>dar cu scope mai restrâns</b> — fără releveu, fără proiect de structură, vizitele pe șantier și randările
+          comerciale se taxează separat. Concrete include releveu + as-build și un PT complet vizat MLPAT. Comparația nu este 1:1 fără
+          alinierea scope-ului. EnsoDesign nu a depus ofertă pentru Medima.
+        </div>
+      </Card>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 18 }}>
+        <Card T={T}>
+          <Title T={T} sub="Total fit-out, fără TVA (RON)">Comparație totaluri</Title>
+          <ResponsiveContainer width="100%" height={230}>
+            <BarChart data={medTotals} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#eee" vertical={false} />
+              <XAxis dataKey="firm" tick={{ fontSize: 12, fill: "#555" }} />
+              <YAxis tick={{ fontSize: 11, fill: "#999" }} tickFormatter={(v) => (v / 1000) + "k"} />
+              <Tooltip formatter={(v) => ronF(v)} />
+              <Bar dataKey="ron" radius={[6, 6, 0, 0]}>
+                {medTotals.map((d, i) => <Cell key={i} fill={colors[d.firm]} />)}
+                <LabelList dataKey="ron" position="top" formatter={(v) => Math.round(v / 1000) + "k"} style={{ fontSize: 11, fontWeight: 700, fill: "#444" }} />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+          <div style={{ fontSize: 11.5, color: "#8a8397", marginTop: 6 }}>A Studio: 29 €/mp × 190 mp + 1.500 € forfetar (verificare MLPAT + scenariu incendiu).</div>
+        </Card>
+        <Card T={T}>
+          <Title T={T} sub="Preț unitar de proiectare">Cost pe m² (EUR)</Title>
+          <ResponsiveContainer width="100%" height={230}>
+            <BarChart data={medTotals} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#eee" vertical={false} />
+              <XAxis dataKey="firm" tick={{ fontSize: 12, fill: "#555" }} />
+              <YAxis tick={{ fontSize: 11, fill: "#999" }} />
+              <Tooltip formatter={(v) => "€" + v.toFixed(1) + "/mp"} />
+              <Bar dataKey="mpRate" radius={[6, 6, 0, 0]}>
+                {medTotals.map((d, i) => <Cell key={i} fill={colors[d.firm]} />)}
+                <LabelList dataKey="mpRate" position="top" formatter={(v) => "€" + v.toFixed(0)} style={{ fontSize: 11, fontWeight: 700, fill: "#444" }} />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+          <div style={{ fontSize: 11.5, color: "#8a8397", marginTop: 6 }}>Suprafețe diferite (190 vs 200 m²) — comparație orientativă.</div>
+        </Card>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <Card T={T} style={{ borderTop: `4px solid ${T.primary}` }}>
+          <Title T={T} sub="Fit-out PT+DDE+As-built · EUR">A Studio — structură ofertă</Title>
+          {medAStudioLines.map((r, i) => (
+            <Row key={i} l={r.item} v={r.val} />
+          ))}
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, paddingTop: 10, borderTop: `2px solid ${T.soft}`, fontWeight: 800, color: T.primary }}>
+            <span>Total (190 m²)</span><span>{money(ASTUDIO_MED, ASTUDIO_MED_EUR)}</span>
+          </div>
+          <div style={{ fontSize: 11.5, color: "#8a8397", marginTop: 8 }}><b style={{ color: T.primary }}>Plată:</b> 100% la predarea PT (fit-out — fără fază de autorizație de construire). Exclude: structură de rezistență, releveu, topo, geotehnic, branșamente, avize, vizite șantier (tarif/vizită), randări comerciale.</div>
+        </Card>
+        <Card T={T} style={{ borderTop: `4px solid ${T.series2}` }}>
+          <Title T={T} sub="PT+AT+As-build · RON">Concrete — structură ofertă</Title>
+          {medConcreteLines.map((r, i) => (
+            <Row key={i} l={r.item} v={r.val} />
+          ))}
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, paddingTop: 10, borderTop: `2px solid ${T.soft}`, fontWeight: 800, color: T.primary }}>
+            <span>Total (200 m²)</span><span>{money(CONCRETE_MED)}</span>
+          </div>
+          <div style={{ fontSize: 11.5, color: "#8a8397", marginTop: 8 }}><b style={{ color: T.primary }}>Plată:</b> nespecificată în ofertă. Termen: PT+DE 3–4 săptămâni · AT max. 6 luni. Exclude: studii de teren (topo, geotehnic), racordare/branșare, studii cerute de emitenții de avize.</div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+function Row({ l, v }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12.5, padding: "6px 0", borderBottom: "1px solid #f0ece6" }}>
+      <span style={{ color: "#46414f" }}>{l}</span>
+      <span style={{ fontWeight: 600, whiteSpace: "nowrap" }}>{v}</span>
+    </div>
+  );
+}
+
+/* ===================== TAB: PROFIL FURNIZORI ============================== */
+const profiles = [
+  { name: "Concrete & Design Solutions", color: "#dd7e6b", tag: "Premium · proiecte speciale",
+    rows: [["Experiență", "11+ ani · proiecte de complexitate ridicată"], ["Acoperire", "A ofertat Medima + Dr. Ardeleanu"],
+      ["ISO", "9001 · 14001 · 27001 · 45001"], ["Autorizații", "IGSU incendiu · IGPR efracție · ANRE electrice & gaze"],
+      ["Asigurare", "Profesională până la €2 mil"], ["Echipă", "PM, arhitect, structurist, instalații, topo, verificatori, experți, geotehnician"],
+      ["Software", "AutoCAD · Revit"], ["Plată", "Nespecificat în ofertă"], ["Contact", "Alin Crăciun, Head of PM"]] },
+  { name: "EnsoDesign", color: "#C9A227", tag: "Candidat #2 (ales)",
+    rows: [["Experiență", "Nespecificată în ofertă"], ["Acoperire", "Doar Dr. Ardeleanu"],
+      ["ISO", "Nemenționate în ofertă"], ["Autorizații", "Nemenționate în ofertă"], ["Asigurare", "Nemenționată"],
+      ["Echipă", "Nedetaliată"], ["Preț Dr.A", "≈ 122.300 RON / 24.553 € (intermediar)"], ["Plată", "Nespecificat în ofertă"], ["Monedă", "EUR"]] },
+];
+function Furnizori({ T, money }) {
+  const aRows = [
+    ["Experiență", "Partener Dr. Ardeleanu din 2017 (firmă din 2015)"],
+    ["Acoperire", "Medima + Dr. Ardeleanu — furnizorul actual al ambelor rețele"],
+    ["Track record", aStudioInfo.nClinici + " clinici Dr. Ardeleanu livrate · medie rețea €46,74/mp"],
+    ["Tarif standard", aStudioInfo.tarifStd + " · studii separate"],
+    ["Comercial", "Discount fidelitate 10% pe servicii de proiectare"],
+    ["Plată", "50% avans · 25% predare PT · 20% autorizație de construire · 5% recepție"],
+    ["Monedă", "EUR"],
+    ["Certificări", "Nespecificate în ofertă"],
+    ["Reprezentant", "Andrei Petrache, General Manager"],
+  ];
+  return (
+    <div>
+      <Card T={T} style={{ marginBottom: 16, background: NEUTRAL.cream }}>
+        <div style={{ fontSize: 13.5, lineHeight: 1.55, color: "#34303d" }}>
+          Comparație de capabilități, dincolo de preț. Pentru rolul de <b>al doilea furnizor</b> contează la fel de mult
+          credențialele instituționale (ISO, autorizații, asigurare, echipă in-house) și capacitatea de a servi <b>ambele rețele</b>.
+        </div>
+      </Card>
+
+      {/* A STUDIO — profil extins (din dashboard-ul A Studio) */}
+      <Card T={T} style={{ marginBottom: 14, borderTop: "4px solid #7B1C16" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 16, color: "#2b2735" }}>A Studio Architecture &amp; Management</div>
+            <div style={{ fontSize: 12, color: "#8a8397" }}>Furnizor actual · din 2017 · 8 clinici Dr. Ardeleanu</div>
+          </div>
+          <Pill bg="#7B1C16">Furnizor actual · benchmark</Pill>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div>
+            {aRows.map((r, j) => (
+              <div key={j} style={{ display: "flex", gap: 8, padding: "5px 0", borderBottom: "1px solid #f3f0f6", fontSize: 12 }}>
+                <span style={{ color: "#8a8397", minWidth: 104, fontWeight: 600 }}>{r[0]}</span>
+                <span style={{ color: "#34303d" }}>{r[1]}</span>
+              </div>
+            ))}
+          </div>
+          <div>
+            <div style={{ background: T.soft, borderRadius: 10, padding: 14 }}>
+              <div style={{ fontWeight: 700, color: T.primary, fontSize: 13, marginBottom: 6 }}>Ofertă în validare — Curtea de Argeș</div>
+              <div style={{ fontSize: 12.5, lineHeight: 1.55, color: "#34303d" }}>
+                {aStudioInfo.curtea.mp} m² · €{aStudioInfo.curtea.mpp}/mp · total {eurF(aStudioInfo.curtea.eur)}<br />
+                Tarife majorate: {aStudioInfo.curtea.tarif}<br />
+                {aStudioInfo.curtea.extra}
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: "#6c6577", marginTop: 10, lineHeight: 1.55 }}>
+              Prețul/mp variază cu complexitatea: €37–48/mp la clinici standard, până la €58–61/mp la monument
+              (Curtea de Argeș, Slatina). Media rețea ≈ €46,74/mp.
+            </div>
+          </div>
+        </div>
+        <div style={{ marginTop: 14 }}>
+          <div style={{ fontWeight: 700, color: T.primary, fontSize: 13.5, marginBottom: 6 }}>Track record — clinici Dr. Ardeleanu</div>
+          <table>
+            <thead>
+              <tr style={{ borderBottom: `2px solid ${T.primary}`, color: T.primary, fontSize: 11.5, textAlign: "left" }}>
+                <th style={{ padding: "5px 8px" }}>Locație</th><th style={{ padding: "5px 8px" }}>Adresă</th>
+                <th style={{ padding: "5px 8px", textAlign: "right" }}>Suprafață</th>
+                <th style={{ padding: "5px 8px", textAlign: "right" }}>Total (€)</th>
+                <th style={{ padding: "5px 8px", textAlign: "right" }}>€/mp</th><th style={{ padding: "5px 8px" }}>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {aStudioHistory.map((r, i) => (
+                <tr key={i} className="row-hover" style={{ borderBottom: "1px solid #f0ece6", fontSize: 12 }}>
+                  <td style={{ padding: "5px 8px", fontWeight: 600 }}>{r.loc}</td>
+                  <td style={{ padding: "5px 8px", color: "#6c6577" }}>{r.addr}</td>
+                  <td style={{ padding: "5px 8px", textAlign: "right" }}>{r.mp ? r.mp + " m²" : "—"}</td>
+                  <td style={{ padding: "5px 8px", textAlign: "right" }}>{r.eur ? eurF(r.eur) : "—"}</td>
+                  <td style={{ padding: "5px 8px", textAlign: "right", fontWeight: 600, color: r.mpp > 55 ? "#c0392b" : "#2c7a3f" }}>{r.mpp ? "€" + r.mpp.toFixed(2) : "—"}</td>
+                  <td style={{ padding: "5px 8px" }}><Pill bg={r.status === "În validare" ? T.accent : "#e3dfea"} color={r.status === "În validare" ? "#3a2a00" : "#555"}>{r.status}</Pill></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div style={{ fontSize: 11.5, color: "#8a8397", marginTop: 6 }}>
+            Sursă: dashboard-ul de benchmark A Studio (oferte istorice, EUR final după discount 10%). €/mp peste 55 marcat roșu (monument). Detalii complete per ofertă — servicii incluse, discounturi, tarife DTAC/PTH — în tab-ul „A Studio · Istoric Oferte".
+          </div>
+        </div>
+      </Card>
+
+      {/* Concrete + EnsoDesign */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 14 }}>
+        {profiles.map((p, i) => (
+          <Card key={i} T={T} style={{ borderTop: `4px solid ${p.color}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <div style={{ fontWeight: 800, fontSize: 14.5, color: "#2b2735", maxWidth: 210 }}>{p.name}</div>
+              <Pill bg={p.color}>{p.tag}</Pill>
+            </div>
+            {p.rows.map((r, j) => (
+              <div key={j} style={{ display: "flex", gap: 8, padding: "5px 0", borderBottom: "1px solid #f3f0f6", fontSize: 12 }}>
+                <span style={{ color: "#8a8397", minWidth: 96, fontWeight: 600 }}>{r[0]}</span>
+                <span style={{ color: "#34303d" }}>{r[1]}</span>
+              </div>
+            ))}
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ===================== TAB: A STUDIO · ISTORIC OFERTE =====================
+   Incorporat din „Dr. Ardeleanu Offers Dashboard — Project Pricing Analysis (A Studio)"
+   Date detaliate per ofertă: servicii, discounturi, tarife DTAC/PTH, status.
+============================================================================ */
+// Dr. Ardeleanu Brand Colors
+const DA_COLORS = {
+  primary: '#7B1C16',     // Burgundy - main brand color
+  olive: '#B5BD5C',       // Olive green - secondary / positive
+  terracotta: '#dd7e6b',  // Tertiary
+  amberGold: '#C9A227',   // Annotations, subtitle text
+  yellow: '#FBE483',      // Budget / highlights / fills
+  wheat: '#F2DAB7',       // Fills / backgrounds
+  cream: '#F5EDE3',       // Card backgrounds
+  alert: '#FF0300',       // Alerts only
+  text: '#222222',
+  white: '#FFFFFF',
+};
+
+// Data extracted from all PDF offers
+const offersData = [
+  {
+    id: 'targoviste',
+    name: 'Târgoviște',
+    date: '19.04.2024',
+    address: 'Calea Câmpulungului, Nr 30',
+    area: 382,
+    totalBeforeDiscount: 19664,
+    discount: 1131.40,
+    discountType: '10%',
+    totalAfterDiscount: 18532.60,
+    services: {
+      releveu: 2500, ridicareTopografica: 1250, expertizaTehnica: 1250, expertizaDesfiintare: 0,
+      studiuGeotehnic: 1000, randari: { qty: 7, total: 2100 }, studiuFezabilitate: 625,
+      auditEnergetic: 625, scenariuIncendiu: 0, proiectDrumuri: 0, studiuIstoric: 0,
+      verificare: 0, sre: 0, raportNzeb: 0, dtac: 4584, pth: 5730, asistentaTehnica: 1000
+    },
+    dtacRate: 12, pthRate: 15, hasMonumentCommission: true, status: 'completed'
+  },
+  {
+    id: 'braila',
+    name: 'Brăila',
+    date: '19.04.2024',
+    address: 'Strada Câmpiniu, Nr 22',
+    area: 810,
+    totalBeforeDiscount: 33045,
+    discount: 2287,
+    discountType: '10%',
+    totalAfterDiscount: 30758,
+    services: {
+      releveu: 2500, ridicareTopografica: 1925, expertizaTehnica: 2125, expertizaDesfiintare: 0,
+      studiuGeotehnic: 0, randari: { qty: 5, total: 1500 }, studiuFezabilitate: 0,
+      auditEnergetic: 0, scenariuIncendiu: 1250, proiectDrumuri: 1875, studiuIstoric: 0,
+      verificare: 0, sre: 0, raportNzeb: 0, dtac: 9720, pth: 12150, asistentaTehnica: 1000
+    },
+    dtacRate: 12, pthRate: 15, hasMonumentCommission: true, status: 'completed'
+  },
+  {
+    id: 'focsani',
+    name: 'Focșani',
+    date: '22.08.2024',
+    address: 'Strada Cernei, Nr 12',
+    area: 382,
+    totalBeforeDiscount: 19814,
+    discount: 2000,
+    discountType: '€2000 flat',
+    totalAfterDiscount: 17814,
+    services: {
+      releveu: 2875, ridicareTopografica: 1250, expertizaTehnica: 3125, expertizaDesfiintare: 0,
+      studiuGeotehnic: 1000, randari: { qty: 0, total: 0 }, studiuFezabilitate: 0,
+      auditEnergetic: 0, scenariuIncendiu: 0, proiectDrumuri: 0, studiuIstoric: 5000,
+      verificare: 1250, sre: 0, raportNzeb: 0, dtac: 4584, pth: 5730, asistentaTehnica: 1000
+    },
+    dtacRate: 12, pthRate: 15, hasMonumentCommission: true, isHistoricBuilding: true, status: 'completed'
+  },
+  {
+    id: 'slatina',
+    name: 'Slatina',
+    date: '15.05.2025',
+    address: 'Strada Ionașcu, Nr 9',
+    area: 362,
+    totalBeforeDiscount: 23174,
+    discount: 1077.40,
+    discountType: '10%',
+    totalAfterDiscount: 22096.60,
+    services: {
+      releveu: 2962.50, ridicareTopografica: 1937.50, expertizaTehnica: 2125, expertizaDesfiintare: 0,
+      studiuGeotehnic: 1000, randari: { qty: 0, total: 0 }, studiuFezabilitate: 0,
+      auditEnergetic: 1250, scenariuIncendiu: 0, proiectDrumuri: 3125, studiuIstoric: 0,
+      verificare: 0, sre: 0, raportNzeb: 0, dtac: 4344, pth: 5430, asistentaTehnica: 1000
+    },
+    dtacRate: 12, pthRate: 15, hasMonumentCommission: true, status: 'completed'
+  },
+  {
+    id: 'slobozia',
+    name: 'Slobozia',
+    date: '27.03.2025',
+    address: 'Walter Mărăcineanu, Nr. 8',
+    area: null,
+    totalBeforeDiscount: 6700,
+    discount: 670,
+    discountType: '10%',
+    totalAfterDiscount: 6030,
+    services: {
+      releveu: 0, ridicareTopografica: 0, expertizaTehnica: 2500, expertizaDesfiintare: 0,
+      studiuGeotehnic: 0, randari: { qty: 0, total: 0 }, studiuFezabilitate: 0,
+      auditEnergetic: 0, scenariuIncendiu: 0, proiectDrumuri: 0, studiuIstoric: 0,
+      verificare: 0, sre: 0, raportNzeb: 0, dtac: 2200, pth: 4000, asistentaTehnica: 500
+    },
+    dtacRate: null, pthRate: null, isLimitedScope: true, status: 'completed'
+  },
+  {
+    id: 'campina',
+    name: 'Câmpina',
+    date: '13.10.2025',
+    address: 'Strada Republicii, Nr. 40',
+    area: 486,
+    totalBeforeDiscount: 20622,
+    discount: 1412.20,
+    discountType: '10%',
+    totalAfterDiscount: 19209.80,
+    services: {
+      releveu: 2500, ridicareTopografica: 0, expertizaTehnica: 2500, expertizaDesfiintare: 0,
+      studiuGeotehnic: 0, randari: { qty: 5, total: 1500 }, studiuFezabilitate: 0,
+      auditEnergetic: 0, scenariuIncendiu: 0, proiectDrumuri: 0, studiuIstoric: 0,
+      verificare: 0, sre: 0, raportNzeb: 0, dtac: 5832, pth: 7290, asistentaTehnica: 1000
+    },
+    dtacRate: 12, pthRate: 15, status: 'approved'
+  },
+  {
+    id: 'oltenita',
+    name: 'Oltenița',
+    date: '12.10.2025',
+    address: 'Strada Argeșului, Nr. 23',
+    area: null,
+    totalBeforeDiscount: 4700,
+    discount: 470,
+    discountType: '10%',
+    totalAfterDiscount: 4230,
+    services: {
+      releveu: 0, ridicareTopografica: 0, expertizaTehnica: 2500, expertizaDesfiintare: 0,
+      studiuGeotehnic: 0, randari: { qty: 0, total: 0 }, studiuFezabilitate: 0,
+      auditEnergetic: 0, scenariuIncendiu: 0, proiectDrumuri: 0, studiuIstoric: 0,
+      verificare: 0, sre: 0, raportNzeb: 0, dtac: 4700, pth: 0, asistentaTehnica: 0
+    },
+    dtacRate: null, pthRate: null, isLimitedScope: true, isDtacOnly: true, status: 'completed'
+  },
+  {
+    id: 'curtea-de-arges',
+    name: 'Curtea de Argeș',
+    date: '13.03.2026',
+    address: 'Negru Vodă Nr. 53',
+    area: 433,
+    totalBeforeDiscount: 26857,
+    discount: 1355.70,
+    discountType: '10%',
+    totalAfterDiscount: 25501.30,
+    services: {
+      releveu: 3125, ridicareTopografica: 1925, expertizaTehnica: 2500, expertizaDesfiintare: 2125,
+      studiuGeotehnic: 0, randari: { qty: 5, total: 1500 }, studiuFezabilitate: 0,
+      auditEnergetic: 0, scenariuIncendiu: 1250, proiectDrumuri: 0, studiuIstoric: 0,
+      verificare: 0, sre: 1875, raportNzeb: 1875, dtac: 5629, pth: 6928, asistentaTehnica: 1000
+    },
+    dtacRate: 13, pthRate: 16, hasMonumentCommission: true, hasDemolition: true,
+    isHighlighted: true, status: 'pending'
+  }
+];
+
+// Calculate derived metrics
+const offersWithMetrics = offersData.map(offer => {
+  const pricePerSqm = offer.area ? (offer.totalAfterDiscount / offer.area).toFixed(2) : null;
+  const designOnlyTotal = offer.services.dtac + offer.services.pth + offer.services.asistentaTehnica;
+  const studiesTotal = Object.entries(offer.services)
+    .filter(([key]) => !['dtac', 'pth', 'asistentaTehnica', 'randari'].includes(key))
+    .reduce((sum, [, val]) => sum + (typeof val === 'number' ? val : 0), 0);
+  
+  return {
+    ...offer,
+    pricePerSqm: pricePerSqm ? parseFloat(pricePerSqm) : null,
+    designOnlyTotal,
+    studiesTotal,
+    randariFee: offer.services.randari.total
+  };
+});
+
+const offersWithArea = offersWithMetrics.filter(o => o.area !== null);
+const benchmarkOffers = offersWithArea.filter(o => o.id !== 'curtea-de-arges' && !o.isLimitedScope);
+const avgPricePerSqm = benchmarkOffers.length > 0 
+  ? (benchmarkOffers.reduce((sum, o) => sum + o.pricePerSqm, 0) / benchmarkOffers.length).toFixed(2) : 0;
+
+const standardDtacRate = 12;
+const standardPthRate = 15;
+const curteaDeArges = offersWithMetrics.find(o => o.id === 'curtea-de-arges');
+const campina = offersWithMetrics.find(o => o.id === 'campina');
+
+
+function AStudio() {
+  const [activeTab, setActiveTab] = useState('overview');
+
+  const formatCurrency = (value) => new Intl.NumberFormat('ro-RO', {
+    style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 2
+  }).format(value);
+
+  const priceComparisonData = offersWithArea.map(o => ({
+    name: o.name, pricePerSqm: o.pricePerSqm, isFocus: o.id === 'curtea-de-arges'
+  }));
+
+  const curteaVsAvg = curteaDeArges?.pricePerSqm && avgPricePerSqm 
+    ? ((curteaDeArges.pricePerSqm - avgPricePerSqm) / avgPricePerSqm * 100) : 0;
+
+  const rateComparisonData = offersWithArea
+    .filter(o => o.dtacRate !== null)
+    .map(o => ({ name: o.name, DTAC: o.dtacRate, PTH: o.pthRate, isFocus: o.id === 'curtea-de-arges' }));
+
+  const TabButton = ({ id, label, badge }) => (
+    <button onClick={() => setActiveTab(id)} style={{
+      padding: '12px 24px', fontSize: '14px', fontWeight: 500, fontFamily: "'Poppins', sans-serif",
+      borderBottom: activeTab === id ? `3px solid ${DA_COLORS.primary}` : '3px solid transparent',
+      color: activeTab === id ? DA_COLORS.primary : '#64748b',
+      backgroundColor: activeTab === id ? DA_COLORS.cream : 'transparent',
+      border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px'
+    }}>
+      {label}
+      {badge && <span style={{
+        padding: '2px 8px', fontSize: '11px', borderRadius: '12px',
+        backgroundColor: badge === 'NEW' ? DA_COLORS.primary : DA_COLORS.olive, color: DA_COLORS.white
+      }}>{badge}</span>}
+    </button>
+  );
+
+  const MetricCard = ({ title, value, subtitle, highlight, trend }) => (
+    <div style={{
+      padding: '20px', borderRadius: '12px',
+      border: `1px solid ${highlight ? DA_COLORS.primary : DA_COLORS.wheat}`,
+      backgroundColor: highlight ? DA_COLORS.cream : DA_COLORS.white,
+    }}>
+      <p style={{ fontSize: '11px', fontWeight: 600, color: DA_COLORS.primary, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>{title}</p>
+      <p style={{ fontSize: '28px', fontWeight: 700, color: highlight ? DA_COLORS.primary : DA_COLORS.text, margin: 0 }}>{value}</p>
+      {subtitle && <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>{subtitle}</p>}
+      {trend !== undefined && (
+        <p style={{ fontSize: '12px', marginTop: '8px', fontWeight: 600, color: trend > 0 ? DA_COLORS.terracotta : DA_COLORS.olive }}>
+          {trend > 0 ? '↑' : '↓'} {Math.abs(trend).toFixed(1)}% vs. media
+        </p>
+      )}
+    </div>
+  );
+
+  const StatusBadge = ({ status }) => {
+    const styles = {
+      approved: { bg: DA_COLORS.wheat, color: '#64748b', border: DA_COLORS.wheat },
+      pending: { bg: DA_COLORS.primary + '15', color: DA_COLORS.primary, border: DA_COLORS.primary },
+      completed: { bg: DA_COLORS.wheat, color: '#64748b', border: DA_COLORS.wheat }
+    };
+    const labels = { approved: '✓ Aprobat', pending: '⏳ În validare', completed: 'Finalizat' };
+    const s = styles[status];
+    return <span style={{ padding: '3px 10px', fontSize: '11px', borderRadius: '12px', border: `1px solid ${s.border}`, backgroundColor: s.bg, color: s.color, fontWeight: 500 }}>{labels[status]}</span>;
+  };
+
+  return (
+    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
+      
+      {/* Intro banner */}
+      <div style={{ background: `linear-gradient(135deg, ${DA_COLORS.primary} 0%, #5a1510 100%)`, borderBottom: `4px solid ${DA_COLORS.amberGold}`, borderRadius: '14px 14px 0 0', padding: '18px 24px', color: DA_COLORS.white }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+          <div>
+            <div style={{ fontSize: '20px', fontWeight: 700, fontFamily: "'Playfair Display', serif" }}>
+              Istoric Oferte <span style={{ color: DA_COLORS.amberGold }}>A Studio</span> · 2024–2026
+            </div>
+            <div style={{ fontSize: '12.5px', color: DA_COLORS.wheat, marginTop: '3px' }}>8 clinici Dr. Ardeleanu · analiză detaliată per ofertă · valori în EUR, fără TVA</div>
+          </div>
+          <div style={{ padding: '7px 14px', backgroundColor: DA_COLORS.amberGold, color: DA_COLORS.text, borderRadius: '8px', fontSize: '12.5px', fontWeight: 600 }}>🎯 Focus: Curtea de Argeș</div>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav style={{ backgroundColor: DA_COLORS.white, borderBottom: `1px solid ${DA_COLORS.wheat}`, borderRadius: '0 0 0 0' }}>
+        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', padding: '0 8px' }}>
+          <TabButton id="overview" label="Sumar General" />
+          <TabButton id="curtea" label="🎯 Analiză Curtea de Argeș" badge="NEW" />
+          <TabButton id="services" label="Servicii Incluse" />
+          <TabButton id="details" label="Detalii Oferte" />
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main style={{ padding: '24px 0 8px' }}>
+        {activeTab === 'overview' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+              <MetricCard title="Total Oferte" value={offersData.length} subtitle="clinici analizate" />
+              <MetricCard title="Curtea de Argeș" value={formatCurrency(curteaDeArges?.totalAfterDiscount || 0)} subtitle={`${curteaDeArges?.area || 0} mp • În validare`} highlight />
+              <MetricCard title="Preț/mp Curtea de Argeș" value={`€${curteaDeArges?.pricePerSqm || 0}`} subtitle="după discount 10%" highlight trend={curteaVsAvg} />
+              <MetricCard title="Media Benchmark" value={`€${avgPricePerSqm}`} subtitle="€/mp (excl. focus)" />
+            </div>
+
+            {/* Alert */}
+            <div style={{ backgroundColor: DA_COLORS.yellow + '40', border: `1px solid ${DA_COLORS.amberGold}`, borderRadius: '12px', padding: '16px 20px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+              <span style={{ fontSize: '20px' }}>⚠️</span>
+              <div>
+                <p style={{ fontWeight: 600, color: DA_COLORS.text, margin: 0 }}>Tarife proiectare mai mari la Curtea de Argeș</p>
+                <p style={{ fontSize: '14px', color: '#666', marginTop: '4px' }}>
+                  DTAC: <strong>€13/mp</strong> (standard €12) • PTH: <strong>€16/mp</strong> (standard €15) — Total <strong>+€866</strong> extra.
+                </p>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div style={{ backgroundColor: DA_COLORS.white, borderRadius: '12px', border: `1px solid ${DA_COLORS.wheat}`, overflow: 'hidden' }}>
+              <div style={{ padding: '16px 24px', borderBottom: `1px solid ${DA_COLORS.wheat}`, backgroundColor: DA_COLORS.wheat + '50' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 600, color: DA_COLORS.primary, margin: 0 }}>Comparație Oferte</h2>
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: DA_COLORS.primary, color: DA_COLORS.white, fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      <th style={{ padding: '12px 24px', textAlign: 'left' }}>Locație</th>
+                      <th style={{ padding: '12px 16px' }}>Status</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'right' }}>Suprafață</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'right' }}>DTAC</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'right' }}>PTH</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'right' }}>Total Final</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'right' }}>€/mp</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {offersWithMetrics.map((offer, idx) => (
+                      <tr key={offer.id} style={{
+                        backgroundColor: offer.isHighlighted ? DA_COLORS.primary + '10' : idx % 2 === 0 ? DA_COLORS.white : DA_COLORS.wheat + '30',
+                        borderBottom: `1px solid ${DA_COLORS.wheat}`
+                      }}>
+                        <td style={{ padding: '16px 24px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {offer.isHighlighted && <span style={{ color: DA_COLORS.primary }}>🎯</span>}
+                            <div>
+                              <p style={{ fontWeight: 600, color: DA_COLORS.text, margin: 0 }}>{offer.name}</p>
+                              <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>{offer.date}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px' }}><StatusBadge status={offer.status} /></td>
+                        <td style={{ padding: '16px', textAlign: 'right', fontWeight: 500 }}>{offer.area ? `${offer.area} mp` : '-'}</td>
+                        <td style={{ padding: '16px', textAlign: 'right' }}>
+                          {offer.dtacRate ? <span style={{ color: offer.dtacRate > standardDtacRate ? DA_COLORS.terracotta : DA_COLORS.text, fontWeight: offer.dtacRate > standardDtacRate ? 600 : 400 }}>€{offer.dtacRate}/mp</span> : '-'}
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'right' }}>
+                          {offer.pthRate ? <span style={{ color: offer.pthRate > standardPthRate ? DA_COLORS.terracotta : DA_COLORS.text, fontWeight: offer.pthRate > standardPthRate ? 600 : 400 }}>€{offer.pthRate}/mp</span> : '-'}
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'right' }}>
+                          <span style={{ fontWeight: 700, color: offer.isHighlighted ? DA_COLORS.primary : DA_COLORS.text }}>{formatCurrency(offer.totalAfterDiscount)}</span>
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'right' }}>
+                          {offer.pricePerSqm ? <span style={{ fontWeight: 600, color: offer.pricePerSqm <= parseFloat(avgPricePerSqm) ? DA_COLORS.olive : DA_COLORS.terracotta }}>€{offer.pricePerSqm}</span> : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Charts */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+              <div style={{ backgroundColor: DA_COLORS.white, borderRadius: '12px', border: `1px solid ${DA_COLORS.wheat}`, padding: '24px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: DA_COLORS.primary, marginBottom: '16px' }}>Preț per mp (€/mp)</h3>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={priceComparisonData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke={DA_COLORS.wheat} />
+                    <XAxis type="number" tick={{ fill: '#64748b', fontSize: 12 }} />
+                    <YAxis dataKey="name" type="category" tick={{ fill: '#64748b', fontSize: 11 }} width={100} />
+                    <Tooltip formatter={(value) => [`€${value}`, 'Preț/mp']} contentStyle={{ borderRadius: '8px', border: `1px solid ${DA_COLORS.wheat}` }} />
+                    <Bar dataKey="pricePerSqm" radius={[0, 4, 4, 0]}>
+                      {priceComparisonData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.isFocus ? DA_COLORS.primary : DA_COLORS.terracotta} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={{ backgroundColor: DA_COLORS.white, borderRadius: '12px', border: `1px solid ${DA_COLORS.wheat}`, padding: '24px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: DA_COLORS.primary, marginBottom: '16px' }}>Tarife Proiectare (€/mp)</h3>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={rateComparisonData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={DA_COLORS.wheat} />
+                    <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 10 }} angle={-45} textAnchor="end" height={70} />
+                    <YAxis tick={{ fill: '#64748b', fontSize: 12 }} domain={[0, 20]} />
+                    <Tooltip formatter={(value) => [`€${value}/mp`]} contentStyle={{ borderRadius: '8px', border: `1px solid ${DA_COLORS.wheat}` }} />
+                    <Legend />
+                    <Bar dataKey="DTAC" fill={DA_COLORS.primary} radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="PTH" fill={DA_COLORS.amberGold} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'curtea' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            {/* Hero Card */}
+            <div style={{ background: `linear-gradient(135deg, ${DA_COLORS.primary} 0%, #5a1510 100%)`, borderRadius: '16px', padding: '32px', color: DA_COLORS.white, borderBottom: `4px solid ${DA_COLORS.amberGold}` }}>
+              <p style={{ color: DA_COLORS.amberGold, fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>Ofertă în validare</p>
+              <h2 style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', fontFamily: "'Playfair Display', serif" }}>Clinica Curtea de Argeș</h2>
+              <p style={{ color: DA_COLORS.wheat, marginTop: '4px' }}>{curteaDeArges?.address}</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginTop: '24px' }}>
+                {[
+                  { label: 'Suprafață', value: `${curteaDeArges?.area} mp` },
+                  { label: 'Total Final', value: formatCurrency(curteaDeArges?.totalAfterDiscount || 0) },
+                  { label: 'Preț/mp', value: `€${curteaDeArges?.pricePerSqm}` }
+                ].map((item, i) => (
+                  <div key={i} style={{ backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '12px', padding: '16px' }}>
+                    <p style={{ color: DA_COLORS.wheat, fontSize: '12px' }}>{item.label}</p>
+                    <p style={{ fontSize: '28px', fontWeight: 700 }}>{item.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Info Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+              <div style={{ backgroundColor: DA_COLORS.yellow + '40', border: `1px solid ${DA_COLORS.amberGold}`, borderRadius: '12px', padding: '24px' }}>
+                <h3 style={{ fontWeight: 600, color: DA_COLORS.text, margin: '0 0 12px 0' }}>⚠️ Tarife Mai Mari</h3>
+                <p style={{ fontSize: '14px', margin: '8px 0' }}>DTAC: <strong>€13/mp</strong> (std: €12)</p>
+                <p style={{ fontSize: '14px', margin: '8px 0' }}>PTH: <strong>€16/mp</strong> (std: €15)</p>
+                <p style={{ fontSize: '13px', color: '#666', marginTop: '12px', paddingTop: '12px', borderTop: `1px solid ${DA_COLORS.amberGold}` }}>Extra cost: <strong>+€866</strong></p>
+              </div>
+              <div style={{ backgroundColor: DA_COLORS.olive + '20', border: `1px solid ${DA_COLORS.olive}`, borderRadius: '12px', padding: '24px' }}>
+                <h3 style={{ fontWeight: 600, color: DA_COLORS.text, margin: '0 0 12px 0' }}>🏗️ Servicii Extra</h3>
+                <p style={{ fontSize: '14px', margin: '6px 0' }}>Expertiză desființare C2: €2,125</p>
+                <p style={{ fontSize: '14px', margin: '6px 0' }}>SRE + NZEB: €3,750</p>
+                <p style={{ fontSize: '14px', margin: '6px 0' }}>Scenariu incendiu: €1,250</p>
+                <p style={{ fontSize: '13px', color: '#666', marginTop: '12px', paddingTop: '12px', borderTop: `1px solid ${DA_COLORS.olive}` }}>Total extra: <strong>€7,125</strong></p>
+              </div>
+              <div style={{ backgroundColor: DA_COLORS.white, border: `1px solid ${DA_COLORS.wheat}`, borderRadius: '12px', padding: '24px' }}>
+                <h3 style={{ fontWeight: 600, color: DA_COLORS.primary, margin: '0 0 12px 0' }}>📊 Evaluare</h3>
+                <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: curteaVsAvg > 15 ? DA_COLORS.yellow + '30' : DA_COLORS.olive + '20', border: `1px solid ${curteaVsAvg > 15 ? DA_COLORS.amberGold : DA_COLORS.olive}` }}>
+                  <p style={{ fontSize: '14px', fontWeight: 600, margin: 0 }}>€{curteaDeArges?.pricePerSqm}/mp</p>
+                  <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>{curteaVsAvg > 0 ? '+' : ''}{curteaVsAvg.toFixed(1)}% vs. media</p>
+                </div>
+                <p style={{ fontSize: '12px', color: '#666', marginTop: '12px' }}>Justificat prin servicii suplimentare</p>
+              </div>
+            </div>
+
+            {/* Comparison Table */}
+            <div style={{ backgroundColor: DA_COLORS.white, borderRadius: '12px', border: `1px solid ${DA_COLORS.wheat}`, padding: '24px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 600, color: DA_COLORS.primary, marginBottom: '16px' }}>Curtea de Argeș vs. Câmpina</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', backgroundColor: DA_COLORS.wheat + '50' }}>Metric</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', backgroundColor: DA_COLORS.primary + '10', color: DA_COLORS.primary }}>Curtea de Argeș</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', backgroundColor: DA_COLORS.olive + '15', color: '#3d5a1d' }}>Câmpina</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', backgroundColor: DA_COLORS.wheat + '50' }}>Diferență</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { m: 'Suprafață', c: `${curteaDeArges?.area} mp`, ca: `${campina?.area} mp`, d: '-53 mp', dc: DA_COLORS.text },
+                    { m: 'Total final', c: formatCurrency(curteaDeArges?.totalAfterDiscount), ca: formatCurrency(campina?.totalAfterDiscount), d: '+€6,291', dc: DA_COLORS.terracotta },
+                    { m: 'Preț/mp', c: `€${curteaDeArges?.pricePerSqm}`, ca: `€${campina?.pricePerSqm}`, d: '+€19.36/mp', dc: DA_COLORS.terracotta },
+                    { m: 'Tarif DTAC', c: '€13/mp', ca: '€12/mp', d: '+€1/mp', dc: DA_COLORS.terracotta },
+                    { m: 'Tarif PTH', c: '€16/mp', ca: '€15/mp', d: '+€1/mp', dc: DA_COLORS.terracotta },
+                  ].map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: `1px solid ${DA_COLORS.wheat}` }}>
+                      <td style={{ padding: '12px 16px', fontWeight: 500 }}>{row.m}</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'right', backgroundColor: DA_COLORS.primary + '05', fontWeight: 600 }}>{row.c}</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'right', backgroundColor: DA_COLORS.olive + '08' }}>{row.ca}</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'right', color: row.dc, fontWeight: 600 }}>{row.d}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Conclusion */}
+            <div style={{ background: `linear-gradient(135deg, ${DA_COLORS.text} 0%, #1a1a1a 100%)`, borderRadius: '12px', padding: '24px', color: DA_COLORS.white }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px', color: DA_COLORS.amberGold }}>📋 Concluzie & Recomandare</h3>
+              <p style={{ color: DA_COLORS.wheat, fontSize: '14px', lineHeight: 1.6 }}>
+                <strong style={{ color: DA_COLORS.amberGold }}>Recomandare:</strong> Oferta este fundamentată datorită serviciilor suplimentare (desființare C2, SRE, NZEB, scenariu incendiu). 
+                Recomand să soliciți aliniere tarife DTAC/PTH la standard (€12/€15) — ar reduce totalul cu ~€866. Alternativ, acceptă dacă Andrei justifică complexitatea proiectului.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'services' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            {/* Service Matrix */}
+            <div style={{ backgroundColor: DA_COLORS.white, borderRadius: '12px', border: `1px solid ${DA_COLORS.wheat}`, overflow: 'hidden' }}>
+              <div style={{ padding: '16px 24px', borderBottom: `1px solid ${DA_COLORS.wheat}`, backgroundColor: DA_COLORS.wheat + '50' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 600, color: DA_COLORS.primary, margin: 0 }}>Matrice Servicii Incluse</h2>
+                <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Comparație servicii între toate ofertele</p>
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: DA_COLORS.primary, color: DA_COLORS.white, fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', position: 'sticky', left: 0, backgroundColor: DA_COLORS.primary, minWidth: '160px' }}>Serviciu</th>
+                      {offersWithMetrics.map(o => (
+                        <th key={o.id} style={{ padding: '12px 8px', textAlign: 'center', backgroundColor: o.isHighlighted ? '#5a1510' : DA_COLORS.primary, minWidth: '90px' }}>
+                          {o.name}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { key: 'releveu', label: 'Releveu' },
+                      { key: 'ridicareTopografica', label: 'Ridicare topografică' },
+                      { key: 'expertizaTehnica', label: 'Expertiză tehnică' },
+                      { key: 'expertizaDesfiintare', label: 'Expertiză desființare', special: true },
+                      { key: 'studiuGeotehnic', label: 'Studiu geotehnic' },
+                      { key: 'studiuFezabilitate', label: 'Studiu fezabilitate' },
+                      { key: 'auditEnergetic', label: 'Audit energetic' },
+                      { key: 'scenariuIncendiu', label: 'Scenariu incendiu' },
+                      { key: 'proiectDrumuri', label: 'Proiect drumuri' },
+                      { key: 'studiuIstoric', label: 'Studiu istoric' },
+                      { key: 'verificare', label: 'Verificare' },
+                      { key: 'sre', label: 'SRE', special: true },
+                      { key: 'raportNzeb', label: 'Raport NZEB', special: true },
+                      { key: 'dtac', label: 'Proiect DTAC' },
+                      { key: 'pth', label: 'Proiect PTH' },
+                      { key: 'asistentaTehnica', label: 'Asistență tehnică' },
+                    ].map((service, idx) => (
+                      <tr key={service.key} style={{
+                        backgroundColor: service.special ? DA_COLORS.primary + '08' : idx % 2 === 0 ? DA_COLORS.white : DA_COLORS.wheat + '30',
+                        borderBottom: `1px solid ${DA_COLORS.wheat}`
+                      }}>
+                        <td style={{
+                          padding: '12px 16px', fontWeight: 500, color: DA_COLORS.text, position: 'sticky', left: 0,
+                          backgroundColor: service.special ? DA_COLORS.primary + '08' : idx % 2 === 0 ? DA_COLORS.white : DA_COLORS.wheat + '30'
+                        }}>
+                          {service.label}
+                          {service.special && <span style={{ marginLeft: '4px', color: DA_COLORS.primary }}>★</span>}
+                        </td>
+                        {offersWithMetrics.map(o => {
+                          const value = o.services[service.key];
+                          const hasService = typeof value === 'object' ? value.total > 0 : value > 0;
+                          return (
+                            <td key={o.id} style={{
+                              padding: '12px 8px', textAlign: 'center',
+                              backgroundColor: o.isHighlighted ? DA_COLORS.primary + '08' : 'transparent'
+                            }}>
+                              {hasService ? (
+                                <span style={{
+                                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                  width: '26px', height: '26px', borderRadius: '50%',
+                                  backgroundColor: DA_COLORS.primary, color: DA_COLORS.white, fontSize: '14px', fontWeight: 700
+                                }}>✓</span>
+                              ) : (
+                                <span style={{
+                                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                  width: '26px', height: '26px', borderRadius: '50%',
+                                  backgroundColor: DA_COLORS.wheat, color: '#999', fontSize: '14px'
+                                }}>-</span>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                    <tr style={{ backgroundColor: DA_COLORS.primary + '10', fontWeight: 600 }}>
+                      <td style={{ padding: '12px 16px', position: 'sticky', left: 0, backgroundColor: DA_COLORS.primary + '10' }}>Randări (buc)</td>
+                      {offersWithMetrics.map(o => (
+                        <td key={o.id} style={{
+                          padding: '12px 8px', textAlign: 'center',
+                          backgroundColor: o.isHighlighted ? DA_COLORS.primary + '15' : DA_COLORS.primary + '10'
+                        }}>
+                          {o.services.randari.qty > 0 ? o.services.randari.qty : '-'}
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div style={{ padding: '12px 24px', backgroundColor: DA_COLORS.wheat + '30', borderTop: `1px solid ${DA_COLORS.wheat}` }}>
+                <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>
+                  <span style={{ color: DA_COLORS.primary }}>★</span> Servicii speciale disponibile doar în anumite oferte — Curtea de Argeș include SRE, NZEB și Expertiză desființare C2
+                </p>
+              </div>
+            </div>
+
+            {/* Cost Breakdown Chart */}
+            <div style={{ backgroundColor: DA_COLORS.white, borderRadius: '12px', border: `1px solid ${DA_COLORS.wheat}`, padding: '24px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 600, color: DA_COLORS.primary, marginBottom: '16px' }}>Structură Costuri per Ofertă</h3>
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={offersWithMetrics.map(o => ({
+                  name: o.name,
+                  'Studii & Avize': o.studiesTotal,
+                  'Proiectare (DTAC+PTH)': o.designOnlyTotal,
+                  'Randări': o.randariFee
+                }))} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke={DA_COLORS.wheat} />
+                  <XAxis type="number" tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `€${(v/1000).toFixed(0)}k`} />
+                  <YAxis dataKey="name" type="category" tick={{ fill: '#64748b', fontSize: 11 }} width={100} />
+                  <Tooltip formatter={(value) => formatCurrency(value)} contentStyle={{ borderRadius: '8px', border: `1px solid ${DA_COLORS.wheat}` }} />
+                  <Legend />
+                  <Bar dataKey="Studii & Avize" stackId="a" fill={DA_COLORS.terracotta} />
+                  <Bar dataKey="Proiectare (DTAC+PTH)" stackId="a" fill={DA_COLORS.primary} />
+                  <Bar dataKey="Randări" stackId="a" fill={DA_COLORS.olive} />
+                </BarChart>
+              </ResponsiveContainer>
+              <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '24px', fontSize: '13px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '16px', height: '16px', backgroundColor: DA_COLORS.terracotta, borderRadius: '4px' }}></div>
+                  <span style={{ color: '#64748b' }}>Studii & Avize</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '16px', height: '16px', backgroundColor: DA_COLORS.primary, borderRadius: '4px' }}></div>
+                  <span style={{ color: '#64748b' }}>Proiectare (DTAC+PTH)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '16px', height: '16px', backgroundColor: DA_COLORS.olive, borderRadius: '4px' }}></div>
+                  <span style={{ color: '#64748b' }}>Randări</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'details' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+            {offersWithMetrics.map(offer => (
+              <div key={offer.id} style={{
+                backgroundColor: DA_COLORS.white, borderRadius: '12px',
+                border: `2px solid ${offer.isHighlighted ? DA_COLORS.primary : DA_COLORS.wheat}`,
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  padding: '16px 20px',
+                  backgroundColor: offer.isHighlighted ? DA_COLORS.primary + '10' : DA_COLORS.wheat + '50',
+                  borderBottom: `1px solid ${DA_COLORS.wheat}`
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: 600, color: offer.isHighlighted ? DA_COLORS.primary : DA_COLORS.text, margin: 0 }}>
+                      {offer.isHighlighted && '🎯 '}{offer.name}
+                    </h3>
+                    <StatusBadge status={offer.status} />
+                  </div>
+                  <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>{offer.address}</p>
+                </div>
+                <div style={{ padding: '20px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '16px' }}>
+                    <div><p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>Suprafață</p><p style={{ fontWeight: 600, margin: 0 }}>{offer.area ? `${offer.area} mp` : 'N/A'}</p></div>
+                    <div><p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>Preț/mp</p><p style={{ fontWeight: 600, margin: 0 }}>{offer.pricePerSqm ? `€${offer.pricePerSqm}` : 'N/A'}</p></div>
+                  </div>
+                  <div style={{ paddingTop: '16px', borderTop: `1px solid ${DA_COLORS.wheat}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '4px' }}>
+                      <span style={{ color: '#64748b' }}>Total brut</span><span>{formatCurrency(offer.totalBeforeDiscount)}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: DA_COLORS.olive }}>
+                      <span>Discount</span><span>-{formatCurrency(offer.discount)}</span>
+                    </div>
+                    <div style={{
+                      display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: 700, marginTop: '12px', paddingTop: '12px',
+                      borderTop: `2px solid ${offer.isHighlighted ? DA_COLORS.primary : DA_COLORS.wheat}`,
+                      color: offer.isHighlighted ? DA_COLORS.primary : DA_COLORS.text
+                    }}>
+                      <span>Total final</span><span>{formatCurrency(offer.totalAfterDiscount)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+
+    </div>
+  );
+}
+
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Dashboard />);
+</script>
+</body>
+</html>
