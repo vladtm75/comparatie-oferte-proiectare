@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Comparație Oferte Proiectare — Medima × Dr. Ardeleanu</title>
+<meta name="description" content="Selecția unui al doilea proiectant: A Studio vs EnsoDesign vs Concrete & Design. Recomandare, prețuri și condiții de plată — fără TVA."/>
+
+<!-- Open Graph / WhatsApp -->
+<meta property="og:type" content="website"/>
+<meta property="og:title" content="Comparație Oferte Proiectare — Medima × Dr. Ardeleanu"/>
+<meta property="og:description" content="Al doilea proiectant: A Studio 92.300 · EnsoDesign 122.300 · Concrete 206.000 RON. Recomandare EnsoDesign, țintă −24%."/>
+<meta property="og:image" content="https://vladtm75.github.io/comparatie-oferte-proiectare/og.png"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:url" content="https://vladtm75.github.io/comparatie-oferte-proiectare/mobile.html"/>
+<meta name="twitter:card" content="summary_large_image"/>
+
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;900&family=Red+Hat+Text:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --da:#7B1C16; --da-dk:#5d130f; --med:#37008D; --gold:#C9A227; --teal:#2AD1BC;
+  --cream:#f6f5f8; --soft:#e7e1ee; --ink:#1f1b29; --mut:#6c6577;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{font-family:'Poppins',system-ui,sans-serif;background:var(--cream);color:var(--ink);font-size:15px;line-height:1.5;
+  padding-bottom:env(safe-area-inset-bottom)}
+h1,h2,h3{margin:0}
+a{color:inherit}
+
+/* HEADER */
+.hero{background:linear-gradient(135deg,var(--da-dk),var(--da) 45%,#2f1a4d 78%,var(--med));color:#fff;padding:18px 18px 16px;
+  padding-top:calc(18px + env(safe-area-inset-top))}
+.hero .brands{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.hero .chip{font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22)}
+.hero h1{font-family:'Playfair Display',serif;font-size:27px;font-weight:900;line-height:1.08}
+.hero .sub{font-size:13px;color:#FBE483;font-weight:600;margin-top:8px;line-height:1.4}
+.hero .note{font-size:11px;color:rgba(255,255,255,.65);margin-top:8px}
+
+/* STICKY NAV */
+nav{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--soft);
+  display:flex;gap:4px;overflow-x:auto;padding:8px 12px;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav a{flex:0 0 auto;font-size:12.5px;font-weight:700;color:var(--mut);text-decoration:none;
+  padding:7px 13px;border-radius:20px;background:var(--cream);white-space:nowrap}
+nav a.on{background:var(--da);color:#fff}
+
+main{padding:16px 14px 40px;max-width:680px;margin:0 auto}
+section{margin-bottom:30px;scroll-margin-top:60px}
+.shead{font-size:12px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--da);margin-bottom:3px}
+.stitle{font-size:20px;font-weight:800;margin-bottom:14px;line-height:1.2}
+
+.card{background:#fff;border:1px solid var(--soft);border-radius:16px;padding:16px;margin-bottom:12px}
+.card.accent{border-left:5px solid var(--gold)}
+
+/* firm price rows */
+.firm{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:14px;border:1px solid var(--soft);background:#fff;margin-bottom:9px}
+.firm .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+.firm .fn{font-weight:800;font-size:15px}
+.firm .ft{font-size:12px;color:var(--mut);margin-top:1px}
+.firm .price{margin-left:auto;text-align:right;flex:0 0 auto}
+.firm .price b{font-size:17px;font-weight:800;display:block}
+.firm .price span{font-size:11.5px;color:var(--mut)}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:20px;margin-top:4px}
+
+/* KPI grid */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid var(--soft);border-radius:14px;padding:12px 13px}
+.kpi .l{font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#8a8397}
+.kpi .v{font-size:19px;font-weight:800;color:var(--da);margin-top:4px;line-height:1.1}
+.kpi .s{font-size:11px;color:var(--mut);margin-top:3px}
+
+/* payment pills */
+.pays{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 10px}
+.pay{padding:11px 12px;border-radius:12px;background:var(--cream);border:1px solid var(--soft)}
+.pay.hot{background:#F2DAB7;border-color:var(--gold)}
+.pay b{font-size:22px;font-weight:800;color:var(--da);display:block}
+.pay span{font-size:11px;color:var(--mut)}
+
+/* history table */
+.htable{width:100%;border-collapse:collapse;font-size:12.5px}
+.htable th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;color:#8a8397;padding:8px 7px;border-bottom:2px solid var(--soft)}
+.htable td{padding:9px 7px;border-bottom:1px solid var(--cream)}
+.htable td.r{text-align:right;font-weight:700;white-space:nowrap}
+.stbadge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:12px}
+
+.reco{display:flex;gap:11px;margin-bottom:13px}
+.reco .n{flex:0 0 auto;width:27px;height:27px;border-radius:50%;background:var(--da);color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center}
+.reco .rt{font-weight:800;font-size:14.5px;margin-bottom:3px;color:var(--da)}
+.reco .rb{font-size:13px;color:#46414f;line-height:1.5}
+.callout{padding:13px;background:#F2DAB7;border-radius:12px;font-size:13px;line-height:1.55;margin-top:6px}
+.muted{font-size:12px;color:var(--mut);line-height:1.5}
+b.da{color:var(--da)}
+
+.deskbtn{display:block;text-align:center;margin:6px 0 30px;padding:13px;border-radius:14px;
+  background:var(--da);color:#fff;font-weight:700;text-decoration:none;font-size:14px}
+footer{text-align:center;color:var(--da);font-weight:300;font-size:11px;letter-spacing:.5px;padding:18px;line-height:1.7}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="brands">
+    <span class="chip">Dr. Ardeleanu Dental Clinics</span>
+    <span class="chip">Medima Health</span>
+  </div>
+  <h1>Comparație Oferte Proiectare</h1>
+  <div class="sub">Selecția unui al doilea proiectant — reducerea dependenței de un furnizor unic</div>
+  <div class="note">3 case de arhitectură · 5 oferte · fără TVA · 1 € = 4,98 RON</div>
+</header>
+
+<nav id="nav">
+  <a href="#sumar" class="on">Recomandare</a>
+  <a href="#dra">Dr. Ardeleanu</a>
+  <a href="#medima">Medima</a>
+  <a href="#istoric">A Studio · Istoric</a>
+  <a href="#furnizori">Profil furnizori</a>
+</nav>
+
+<main>
+
+  <!-- RECOMANDARE -->
+  <section id="sumar">
+    <div class="shead">Concluzii</div>
+    <div class="stitle">Recomandare &amp; plan de acțiune</div>
+
+    <div class="card accent">
+      <div style="font-weight:800;color:var(--da);margin-bottom:5px">Obiectiv</div>
+      <div class="muted">Adăugarea unui <b class="da">al doilea proiectant</b> alături de A Studio, pentru a reduce dependența de un furnizor unic pe măsură ce rețelele se extind. <b>Nu o înlocuire</b> — A Studio a livrat constant (8 clinici din 2017); riscul e concentrarea, nu performanța.</div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="l">Oferte analizate</div><div class="v">5</div><div class="s">3 case · 2 rețele</div></div>
+      <div class="kpi"><div class="l">Spread preț Dr.A</div><div class="v">2,2×</div><div class="s">A Studio → Concrete</div></div>
+    </div>
+
+    <div class="card">
+      <div class="reco"><div class="n">1</div><div><div class="rt">A Studio rămâne principalul &amp; benchmark-ul</div><div class="rb">Track record dovedit (8 clinici), cel mai bun preț (≈ 92.300 RON / 18.533 €) și condiții de plată clare. Referința de preț <b>și</b> de eșalonare pentru ceilalți.</div></div></div>
+      <div class="reco"><div class="n">2</div><div><div class="rt">EnsoDesign — al doilea furnizor ales</div><div class="rb">Îl aducem <b>cât mai aproape de A Studio</b>. Cost: de la ≈ 122.300 RON (24.553 €) către ≈ 92.300 RON (18.533 €) — țintă ~ <b class="da">−24%</b>. Plată: adoptarea graficului A Studio. În paralel: dovezi ISO/asigurare/echipă + pilot.</div></div></div>
+      <div class="reco"><div class="n">3</div><div><div class="rt">Concrete &amp; Design — exclus de rută</div><div class="rb">Credențiale excelente, dar ~2,2× față de A Studio. Rămâne pe lista scurtă doar pentru proiecte excepționale și după renegociere.</div></div></div>
+      <div class="callout"><b class="da">Țintă EnsoDesign vs A Studio (Dr.A, fără TVA):</b><br>Cost 122.300 → ~92.300 RON (~−24% / ~6.000 €). Plată: aliniere la 50% avans / 20% la autorizația de construire (model A Studio).</div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:800;color:var(--da);margin-bottom:8px">Benchmark · condiții de plată (A Studio)</div>
+      <div class="pays">
+        <div class="pay hot"><b>50%</b><span>Avans la semnare</span></div>
+        <div class="pay"><b>25%</b><span>La predare PT</span></div>
+        <div class="pay hot"><b>20%</b><span>La autorizația de construire</span></div>
+        <div class="pay"><b>5%</b><span>La recepție</span></div>
+      </div>
+      <div class="muted">Singurul furnizor cu grafic detaliat. EnsoDesign și Concrete nu specifică un grafic — îl cerem aliniat la acest model.</div>
+    </div>
+  </section>
+
+  <!-- DR ARDELEANU -->
+  <section id="dra">
+    <div class="shead" style="color:var(--da)">Clinică 382 m² · monument istoric</div>
+    <div class="stitle">Dr. Ardeleanu — 3 oferte</div>
+    <div class="firm"><span class="dot" style="background:var(--da)"></span><div><div class="fn">A Studio</div><div class="ft">Cea mai mică · incumbent</div></div><div class="price"><b>92.292 RON</b><span>≈ €18.533</span></div></div>
+    <div class="firm"><span class="dot" style="background:var(--gold)"></span><div><div class="fn">EnsoDesign</div><div class="ft">Intermediar · candidat #2</div></div><div class="price"><b>122.274 RON</b><span>≈ €24.553</span></div></div>
+    <div class="firm"><span class="dot" style="background:#dd7e6b"></span><div><div class="fn">Concrete &amp; Design</div><div class="ft">Premium · full-service</div></div><div class="price"><b>206.000 RON</b><span>≈ €41.365</span></div></div>
+    <div class="muted" style="margin-top:8px">A Studio include discount fidelitate 10%. EnsoDesign ≈ 1,3× A Studio (în prag acceptabil). Concrete ≈ 2,2× — peste buget pentru proiecte de rută.</div>
+  </section>
+
+  <!-- MEDIMA -->
+  <section id="medima">
+    <div class="shead" style="color:var(--med)">Fit-out clinică ~190 m²</div>
+    <div class="stitle">Medima — 2 oferte</div>
+    <div class="firm"><span class="dot" style="background:var(--med)"></span><div><div class="fn">A Studio</div><div class="ft">Scope redus · 29 €/mp + forfetar</div></div><div class="price"><b>34.910 RON</b><span>≈ €7.010</span></div></div>
+    <div class="firm"><span class="dot" style="background:#7D5DE7"></span><div><div class="fn">Concrete &amp; Design</div><div class="ft">Incl. releveu + as-build</div></div><div class="price"><b>53.000 RON</b><span>≈ €10.643</span></div></div>
+    <div class="muted" style="margin-top:8px"><b class="da">EnsoDesign lipsește</b> pe Medima — pas următor: cerem o ofertă pe același brief, pentru comparație completă.</div>
+  </section>
+
+  <!-- ISTORIC A STUDIO -->
+  <section id="istoric">
+    <div class="shead">Partener din 2017 · 8 clinici · media €46,74/mp</div>
+    <div class="stitle">A Studio — istoric oferte Dr. Ardeleanu</div>
+    <div class="card" style="padding:6px 12px;overflow-x:auto">
+      <table class="htable">
+        <thead><tr><th>Locație</th><th class="r">m²</th><th class="r">EUR</th><th class="r">€/mp</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Brăila</td><td class="r">810</td><td class="r">30.758</td><td class="r">37,97</td><td><span class="stbadge" style="background:#dcedc8;color:#33691e">Finalizat</span></td></tr>
+          <tr><td>Câmpina</td><td class="r">486</td><td class="r">19.210</td><td class="r">39,53</td><td><span class="stbadge" style="background:#e1f5fe;color:#0277bd">Aprobat</span></td></tr>
+          <tr><td>Focșani</td><td class="r">382</td><td class="r">17.814</td><td class="r">46,63</td><td><span class="stbadge" style="background:#dcedc8;color:#33691e">Finalizat</span></td></tr>
+          <tr><td>Târgoviște</td><td class="r">382</td><td class="r">18.533</td><td class="r">48,51</td><td><span class="stbadge" style="background:#dcedc8;color:#33691e">Finalizat</span></td></tr>
+          <tr><td>Curtea de Argeș</td><td class="r">433</td><td class="r">25.501</td><td class="r">58,89</td><td><span class="stbadge" style="background:#fff3e0;color:#e65100">În validare</span></td></tr>
+          <tr><td>Slatina</td><td class="r">362</td><td class="r">22.097</td><td class="r">61,04</td><td><span class="stbadge" style="background:#dcedc8;color:#33691e">Finalizat</span></td></tr>
+          <tr><td>Slobozia</td><td class="r">—</td><td class="r">6.030</td><td class="r">—</td><td><span class="stbadge" style="background:#dcedc8;color:#33691e">Finalizat</span></td></tr>
+          <tr><td>Oltenița</td><td class="r">—</td><td class="r">4.230</td><td class="r">—</td><td><span class="stbadge" style="background:#dcedc8;color:#33691e">Finalizat</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="muted">Tarif standard DTAC 12 €/mp · PTh 15 €/mp. Discount fidelitate 10% · plată eșalonată.</div>
+  </section>
+
+  <!-- FURNIZORI -->
+  <section id="furnizori">
+    <div class="shead">Profil furnizori</div>
+    <div class="stitle">Cele 3 case de arhitectură</div>
+    <div class="card">
+      <div class="fn" style="color:var(--da);font-size:16px">A Studio <span class="tag" style="background:#F2DAB7;color:#5d130f">Furnizor actual</span></div>
+      <div class="muted" style="margin-top:6px">Partener Medima + Dr. Ardeleanu din 2017 · 8 clinici livrate · tarif mediu €46,74/mp · discount fidelitate 10% · plată eșalonată. Preț competitiv, dar dependență de furnizor unic.</div>
+    </div>
+    <div class="card">
+      <div class="fn" style="color:#dd7e6b;font-size:16px">Concrete &amp; Design <span class="tag" style="background:#fde0d9;color:#b23b28">Premium · peste buget</span></div>
+      <div class="muted" style="margin-top:6px">11+ ani · ISO 9001/14001/27001/45001 · autorizații in-house (incendiu, efracție, electrice, gaze) · asigurare profesională €2 mil · echipă completă. Preț ~2,2× A Studio → exclus ca furnizor de rută.</div>
+    </div>
+    <div class="card">
+      <div class="fn" style="color:var(--gold);font-size:16px">EnsoDesign <span class="tag" style="background:#fff3cd;color:#7a5c00">Candidat #2 realist</span></div>
+      <div class="muted" style="margin-top:6px">Preț ~1,3× A Studio (≈ 24.553 € pe Dr.A) — în prag acceptabil · ofertă în EUR · scope similar pe faze. Fără ISO/asigurare/echipă menționate în ofertă — de validat credențiale + grafic de plăți înainte de contractare.</div>
+    </div>
+  </section>
+
+  <a class="deskbtn" href="index.html">Deschide dashboard-ul complet (desktop) →</a>
+
+</main>
+
+<footer>Medima Health · Excelență în imagistică medicală<br>Clinicile Dr. Ardeleanu · Din 2017</footer>
+
+<script>
+// highlight active nav link on scroll
+var links=[].slice.call(document.querySelectorAll('#nav a'));
+var secs=links.map(function(a){return document.querySelector(a.getAttribute('href'));});
+function onScroll(){
+  var y=window.scrollY+70,idx=0;
+  for(var i=0;i<secs.length;i++){ if(secs[i]&&secs[i].offsetTop<=y) idx=i; }
+  links.forEach(function(a,i){a.classList.toggle('on',i===idx);});
+  var act=links[idx]; if(act) act.scrollIntoView({inline:'center',block:'nearest'});
+}
+window.addEventListener('scroll',onScroll,{passive:true});
+links.forEach(function(a){a.addEventListener('click',function(e){
+  e.preventDefault();
+  var t=document.querySelector(a.getAttribute('href'));
+  if(t) window.scrollTo({top:t.offsetTop-56,behavior:'smooth'});
+});});
+</script>
+</body>
+</html>
